@@ -180,7 +180,7 @@ public class DudeController : MonoBehaviour
             _isPastApexThreshold = false;
             _jumpsUsed = 0;
 
-            VerticalVelocity = Physics2D.gravity.y;
+            VerticalVelocity = -MoveStats.MaxFallSpeed;
         }
     }
 
@@ -259,7 +259,7 @@ public class DudeController : MonoBehaviour
         {
             if (!_isFalling)
                 _isFalling = true;
-            //VerticalVelocity += MoveStats.Gravity * Time.fixedDeltaTime;
+            VerticalVelocity = -MoveStats.MaxFallSpeed;
         }
 
         VerticalVelocity = Mathf.Clamp(VerticalVelocity, -MoveStats.MaxFallSpeed, 50f);
