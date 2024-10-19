@@ -36,7 +36,20 @@ public class ObjectiveManager : MonoBehaviour
         {
             SpawnFlag();
             NextGoal();
+            KillPlayer();
+            ClearMirrorMemory();
         }
+    }
+
+    private void ClearMirrorMemory()
+    {
+        _pointsInTime = new List<InputPoint>();
+        _mirrorPoints = new List<List<InputPoint>>();
+        foreach (GameObject mirror in _mirrors)
+        {
+            Destroy(mirror);
+        }
+        _mirrors = new List<GameObject>();
     }
 
     private void SpawnFlag()
