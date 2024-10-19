@@ -7,7 +7,13 @@ public class ObjectiveManager : MonoBehaviour
 
     [SerializeField] private List<GameObject> _goals;
     [SerializeField] private GameObject _flag;
+    [SerializeField] private GameObject _player;
+    [SerializeField] private float _lifetime = 10f;
+    [SerializeField] private GameObject _mirrorPrefab;
 
+
+    private float _lifeTimer;
+    public bool TimerActive { get; set; }
     private int _currentGoal;
 
     private void Start()
@@ -18,6 +24,10 @@ public class ObjectiveManager : MonoBehaviour
         }
         _currentGoal = 0;
         _goals[_currentGoal].SetActive(true);
+
+        _pointsInTime = new List<InputPoint>();
+        _mirrorPoints = new List<List<InputPoint>>();
+        _mirrors = new List<GameObject>();
     }
 
     public void CurrentGoalTouched(int goalNum)
@@ -31,8 +41,6 @@ public class ObjectiveManager : MonoBehaviour
 
     private void SpawnFlag()
     {
-        Debug.Log(_currentGoal);
-        Debug.Log(_goals[_currentGoal].transform.position.x);
         _flag.transform.position = _goals[_currentGoal].transform.position;
         _flag.GetComponent<Animator>().SetTrigger("Spawn");
     }
@@ -44,4 +52,97 @@ public class ObjectiveManager : MonoBehaviour
         _goals[_currentGoal].SetActive(true);
     }
 
+    public void KillPlayer()
+    {
+        _player.transform.position = _flag.transform.position;
+        StopAllCoroutines();
+        ReturnMirrors();
+        _mirrorPoints.Add(_pointsInTime);
+
+        _pointsInTime = new List<InputPoint>();
+        _lifeTimer = 0f;
+        TimerActive = false;
+    }
+
+    private void ReturnMirrors()
+    {
+        foreach (GameObject mirror in _mirrors)
+        {
+            mirror.SetActive(false);
+            mirror.transform.position = _player.transform.position;
+        }
+    }
+
+    private bool _jumpPress;
+    private bool _jumpRelease;
+    private void Update()
+    {
+        if (InputManager.JumpPressed)
+            _jumpPress = true;
+        if (InputManager.JumpReleased)
+            _jumpRelease = true;
+    }
+
+    private List<InputPoint> _pointsInTime;
+    private List<List<InputPoint>> _mirrorPoints;
+    private List<GameObject> _mirrors;
+    private InputPoint _activeInput;
+    private void FixedUpdate()
+    {
+        if (TimerActive) // timer running
+        {
+            _lifeTimer += Time.fixedDeltaTime;
+        }
+        else if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed) // start and add current active input
+        {
+            TimerActive = true;
+            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            _jumpPress = false;
+            _jumpRelease = false;
+            _pointsInTime.Add(_activeInput);
+
+            // replay mirrors
+            for (int i = 0; i < _mirrors.Count; i++)
+            {
+                 StartCoroutine(MoveMirror(_mirrors[i], _mirrorPoints[i]));
+            }
+
+            GameObject nextMirror = Instantiate(_mirrorPrefab);
+            _mirrors.Add(nextMirror);
+            nextMirror.SetActive(false);
+        }
+
+        if (_lifeTimer > _lifetime)
+        {
+            KillPlayer();
+        }
+        else if (_lifeTimer > 0f)
+        {
+            // compare current input to active input and add if not same
+            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+
+            if (!currentInput.Equals(_activeInput))
+            {
+                _pointsInTime.Add(currentInput);
+                _activeInput = currentInput;
+                _jumpPress = false;
+                _jumpRelease = false;
+            }
+        }
+    }
+
+    private IEnumerator MoveMirror(GameObject mirror, List<InputPoint> mirrorInputs)
+    {
+        mirror.transform.position = _player.transform.position;
+        mirror.SetActive(true);
+        MirrorController mController = mirror.GetComponent<MirrorController>();
+        Debug.Log(mirrorInputs.Count);
+
+        for (int i = 0; i < mirrorInputs.Count; i++)
+        {
+            mController.SetInput(mirrorInputs[i]);
+            if (i < mirrorInputs.Count - 1)
+                yield return new WaitForSeconds(mirrorInputs[i + 1].InputTime - mirrorInputs[i].InputTime);
+        }
+    }
 }
