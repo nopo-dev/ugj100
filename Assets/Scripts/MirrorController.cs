@@ -20,6 +20,11 @@ public class MirrorController : MonoBehaviour
     private RaycastHit2D _groundHit;
     private bool _bumpedHead;
     private bool _isGrounded;
+    public bool Grounded
+    {
+        get { return _isGrounded; }
+        set { _isGrounded = value; }
+    }
 
     public float VerticalVelocity { get; private set; }
     private bool _isJumping;
@@ -43,6 +48,7 @@ public class MirrorController : MonoBehaviour
         _isFacingRight = true;
         _rb = GetComponent<Rigidbody2D>();
         _anim = GetComponent<Animator>();
+        _thingsColliding = new List<Collider2D>();
     }
 
     private void Update()
@@ -66,6 +72,8 @@ public class MirrorController : MonoBehaviour
         CollisionChecks();
         Jump();
         _anim.SetFloat("YVelocity", VerticalVelocity);
+        if (_moveInput == Vector2.zero)
+            _anim.SetBool("Pushing", false);
 
         if (_isGrounded)
         {
@@ -113,17 +121,45 @@ public class MirrorController : MonoBehaviour
         Vector2 boxCastSize = new Vector2(_feetCollider.bounds.size.x, MoveStats.GroundDetectionRayLength);
 
         _groundHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, Vector2.down, MoveStats.GroundDetectionRayLength, MoveStats.GroundLayer);
-        if (_groundHit.collider != null)
+        if (_groundHit.collider != null && VerticalVelocity <= 0)
         {
             _isGrounded = true;
             _anim.SetBool("Grounded", true);
+            _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
         }
         else
         {
             _isGrounded = false;
             _anim.SetBool("Grounded", false);
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
     }
+
+    private List<Collider2D> _thingsColliding;
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.tag == "Box" && _moveInput != Vector2.zero && _isGrounded)
+        {
+            _thingsColliding.Add(other);
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        Vector2 contactPoint = other.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+        if (contactPoint.y < transform.position.y || contactPoint.y > transform.position.y + 0.9f)
+            return;
+        if (other.gameObject.tag == "Box" && _moveInput != Vector2.zero && _isGrounded)
+        {
+            _anim.SetBool("Pushing", true);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        _thingsColliding.Remove(other);
+    }
+
 
     private void BumpedHead()
     {
@@ -208,6 +244,8 @@ public class MirrorController : MonoBehaviour
 
     private void Jump()
     {
+        if (_jumpPress)
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         if (_isJumping)
         {
             if (_bumpedHead)

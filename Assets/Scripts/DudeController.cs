@@ -21,6 +21,12 @@ public class DudeController : MonoBehaviour
     private bool _bumpedHead;
     private bool _isGrounded;
 
+    public bool Grounded
+    {
+        get { return _isGrounded; }
+        set { _isGrounded = value; }
+    }
+
     public float VerticalVelocity { get; private set; }
     private bool _isJumping;
     private bool _isFastFalling;
@@ -43,6 +49,7 @@ public class DudeController : MonoBehaviour
         _isFacingRight = true;
         _rb = GetComponent<Rigidbody2D>();
         _anim = GetComponent<Animator>();
+        _thingsColliding = new List<Collider2D>();
     }
 
     private void Update()
@@ -56,6 +63,8 @@ public class DudeController : MonoBehaviour
         CollisionChecks();
         Jump();
         _anim.SetFloat("YVelocity", VerticalVelocity);
+        if (InputManager.Movement == Vector2.zero || _thingsColliding.Count == 0)
+            _anim.SetBool("Pushing", false);
 
         if (_isGrounded)
         {
@@ -89,6 +98,32 @@ public class DudeController : MonoBehaviour
         }
     }
 
+    private List<Collider2D> _thingsColliding;
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.gameObject.tag == "Box" && InputManager.Movement != Vector2.zero && _isGrounded)
+        {
+            _thingsColliding.Add(other);
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        Vector2 contactPoint = other.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+        if (contactPoint.y < transform.position.y || contactPoint.y > transform.position.y + 0.9f)
+            return;
+        if (other.gameObject.tag == "Box" && InputManager.Movement != Vector2.zero && _isGrounded)
+        {
+            _anim.SetBool("Pushing", true);
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        _thingsColliding.Remove(other);
+    }
+
     private void TurnCheck(Vector2 moveInput)
     {
         _isFacingRight = moveInput.x > 0 ? true : false;
@@ -103,15 +138,17 @@ public class DudeController : MonoBehaviour
         Vector2 boxCastSize = new Vector2(_feetCollider.bounds.size.x, MoveStats.GroundDetectionRayLength);
 
         _groundHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, Vector2.down, MoveStats.GroundDetectionRayLength, MoveStats.GroundLayer);
-        if (_groundHit.collider != null)
+        if (_groundHit.collider != null && VerticalVelocity <= 0f)
         {
             _isGrounded = true;
             _anim.SetBool("Grounded", true);
+            _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
         }
         else
         {
             _isGrounded = false;
             _anim.SetBool("Grounded", false);
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
     }
 
@@ -198,6 +235,8 @@ public class DudeController : MonoBehaviour
 
     private void Jump()
     {
+        if (InputManager.JumpPressed)
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         if (_isJumping)
         {
             if (_bumpedHead)

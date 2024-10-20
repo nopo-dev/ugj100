@@ -7,6 +7,7 @@ public class ObjectiveManager : MonoBehaviour
 
     [SerializeField] private List<GameObject> _goals;
     [SerializeField] private GameObject _flag;
+    [SerializeField] private List<GameObject> _boxes;
     [SerializeField] private GameObject _player;
     [SerializeField] private float _lifetime = 10f;
     [SerializeField] private GameObject _mirrorPrefab;
@@ -24,6 +25,12 @@ public class ObjectiveManager : MonoBehaviour
         }
         _currentGoal = 0;
         _goals[_currentGoal].SetActive(true);
+
+        _boxStartPositions = new List<Vector3>();
+        foreach (GameObject box in _boxes)
+        {
+            _boxStartPositions.Add(box.transform.position);
+        }
 
         _pointsInTime = new List<InputPoint>();
         _mirrorPoints = new List<List<InputPoint>>();
@@ -69,6 +76,7 @@ public class ObjectiveManager : MonoBehaviour
     {
         _player.transform.position = _flag.transform.position;
         StopAllCoroutines();
+        ReturnBoxes();
         ReturnMirrors();
         _mirrorPoints.Add(_pointsInTime);
 
@@ -85,6 +93,16 @@ public class ObjectiveManager : MonoBehaviour
             mirror.transform.position = _player.transform.position;
         }
     }
+
+    private List<Vector3> _boxStartPositions;
+    private void ReturnBoxes()
+    {
+        for (int i = 0; i < _boxes.Count; i++)
+        {
+            _boxes[i].transform.position = _boxStartPositions[i];
+        }
+    }
+
 
     private bool _jumpPress;
     private bool _jumpRelease;
@@ -149,7 +167,6 @@ public class ObjectiveManager : MonoBehaviour
         mirror.transform.position = _player.transform.position;
         mirror.SetActive(true);
         MirrorController mController = mirror.GetComponent<MirrorController>();
-        Debug.Log(mirrorInputs.Count);
 
         for (int i = 0; i < mirrorInputs.Count; i++)
         {
