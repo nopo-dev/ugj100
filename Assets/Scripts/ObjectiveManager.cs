@@ -80,6 +80,7 @@ public class ObjectiveManager : MonoBehaviour
         StopAllCoroutines();
         ReturnBoxes();
         ReturnMirrors();
+        _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false));
         _mirrorPoints.Add(_pointsInTime);
 
         _pointsInTime = new List<InputPoint>();

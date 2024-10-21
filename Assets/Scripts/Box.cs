@@ -99,6 +99,10 @@ public class Box : MonoBehaviour
                 {
                     _groundObject = groundHit.collider.transform.parent.transform.parent.gameObject;
                 }
+                // else if (groundHit.collider.tag == "Moving Platform")
+                // {
+                //     _groundObject = groundHit.collider.gameObject;
+                // }
                 if (_groundObject != null)
                 {
                     if (_groundObject == gameObject)

@@ -159,6 +159,10 @@ public class DudeController : MonoBehaviour
             {
                 _groundObject = _groundHit.collider.transform.parent.transform.parent.gameObject;
             }
+            else if (_groundHit.collider.tag == "Moving Platform")
+            {
+                _groundObject = _groundHit.collider.gameObject;
+            }
         }
         else
         {
