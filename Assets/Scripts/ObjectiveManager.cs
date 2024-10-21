@@ -74,6 +74,8 @@ public class ObjectiveManager : MonoBehaviour
 
     public void KillPlayer()
     {
+        if (!TimerActive)
+            return;
         _player.transform.position = _flag.transform.position;
         StopAllCoroutines();
         ReturnBoxes();

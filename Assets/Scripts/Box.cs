@@ -8,12 +8,12 @@ public class Box : MonoBehaviour
     [Header("References")]
     public BoxStats MoveStats;
     [SerializeField] private Collider2D _bodyCollider;
-
+    
     private Rigidbody2D _rb;
-
+    private VelocityCalculator _velocityCalc;
     private Vector2 _moveVelocity;
 
-    private RaycastHit2D _groundHit;
+    private RaycastHit2D[] _groundHits;
     private bool _isGrounded;
 
     public bool Grounded
@@ -34,12 +34,16 @@ public class Box : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody2D>();
         _thingsColliding = new List<Collider2D>();
+        _velocityCalc = GetComponent<VelocityCalculator>();
     }
 
     private void Update()
     {
         JumpChecks();
-        // ResetPushCheck();
+        if (_isGrounded && _thingsColliding.Count == 0)
+        {
+            _velocityCalc.Velocity = Vector2.zero;
+        }
     }
 
     private void FixedUpdate()
@@ -50,6 +54,10 @@ public class Box : MonoBehaviour
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, Vector2.zero);
+            if (_groundObject != null)
+            {
+                _rb.velocity = _groundObject.GetComponent<VelocityCalculator>().Velocity;
+            }
         }
         else
         {
@@ -75,22 +83,41 @@ public class Box : MonoBehaviour
     }
     #endregion
 
+    private GameObject _groundObject;
     #region Collision
     private void IsGrounded()
     {
         Vector2 boxCastOrigin = new Vector2(_bodyCollider.bounds.center.x, _bodyCollider.bounds.min.y);
         Vector2 boxCastSize = new Vector2(_bodyCollider.bounds.size.x, MoveStats.GroundDetectionRayLength);
 
-        _groundHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, Vector2.down, MoveStats.GroundDetectionRayLength, MoveStats.GroundLayer);
-        if (_groundHit.collider != null)
+        _groundHits = Physics2D.BoxCastAll(boxCastOrigin, boxCastSize, 0f, Vector2.down, MoveStats.GroundDetectionRayLength, MoveStats.GroundLayer);
+        foreach (RaycastHit2D groundHit in _groundHits)
         {
-            _isGrounded = true;
-            _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
-        }
-        else
-        {
-            _isGrounded = false;
-            _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            if (groundHit.collider != null)
+            {
+                if (groundHit.collider.tag == "Box")
+                {
+                    _groundObject = groundHit.collider.transform.parent.transform.parent.gameObject;
+                }
+                if (_groundObject != null)
+                {
+                    if (_groundObject == gameObject)
+                    {
+                        break;
+                    }
+                    Vector2 contactPoint = groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+                    transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
+                }
+                _isGrounded = true;
+                _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+                break;
+            }
+            else
+            {
+                _isGrounded = false;
+                _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                _groundObject = null;
+            }
         }
     }
 
@@ -107,24 +134,7 @@ public class Box : MonoBehaviour
             return;
 
         _thingsColliding.Add(other);
-        switch (other.gameObject.tag)
-        {
-            case "Player":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<DudeController>().Grounded)
-                    GetComponent<Rigidbody2D>().bodyType = 0f;
-                break;
-            case "Mirror":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<MirrorController>().Grounded)
-                        GetComponent<Rigidbody2D>().mass = 0f;
-                break;
-            case "Box":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<Box>().Grounded)
-                        GetComponent<Rigidbody2D>().mass = 0f;
-                break;
-            default:
-                Debug.Log("something unaccounted for has happened");
-                break;
-        }
+        _velocityCalc.TrackVelocity = true;
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -135,72 +145,12 @@ public class Box : MonoBehaviour
         _thingsColliding.Remove(other);
         if (_thingsColliding.Count == 0)
         {
-            GetComponent<Rigidbody2D>().mass = 1f;
-            return;
-        }
-        switch (other.gameObject.tag)
-        {
-            case "Player":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<DudeController>().Grounded)
-                    GetComponent<Rigidbody2D>().mass = 1f;
-                break;
-            case "Mirror":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<MirrorController>().Grounded)
-                        GetComponent<Rigidbody2D>().mass = 1f;
-                break;
-            case "Box":
-                if (other.gameObject.transform.parent.transform.parent.GetComponent<Box>().Grounded)
-                        GetComponent<Rigidbody2D>().mass = 1f;
-                break;
-            default:
-                Debug.Log("something unaccounted for has happened");
-                break;
+            _velocityCalc.TrackVelocity = false;
         }
     }
 
-    private void OnTriggerStay2D(Collider2D other)
-    {
-        foreach (Collider2D coll in _thingsColliding)
-        {
-            switch (coll.gameObject.tag)
-            {
-                case "Player":
-                    if (coll.gameObject.transform.parent.transform.parent.GetComponent<DudeController>().Grounded)
-                    {
-                        GetComponent<Rigidbody2D>().mass = 0f;
-                        return;
-                    }
-                    break;
-                case "Mirror":
-                    if (coll.gameObject.transform.parent.transform.parent.GetComponent<MirrorController>().Grounded)
-                    {
-                        GetComponent<Rigidbody2D>().mass = 0f;
-                        return;
-                    }
-                    break;
-                case "Box":
-                    if (coll.gameObject.transform.parent.transform.parent.GetComponent<Box>().Grounded)
-                    {
-                        GetComponent<Rigidbody2D>().mass = 0f;
-                        return;
-                    }
-                    break;
-                default:
-                    Debug.Log("something unaccounted for has happened");
-                    break;
-            }
-        }
-        GetComponent<Rigidbody2D>().mass = 1f;
-    }
-
-    // public void Push(Vector2 direction)
+    // private void OnTriggerStay2D(Collider2D other)
     // {
-    //     _xMovement += direction;
-    // }
-
-    // private void ResetPushCheck()
-    // {
-    //     if 
     // }
 
     #endregion

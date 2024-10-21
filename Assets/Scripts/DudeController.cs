@@ -69,6 +69,11 @@ public class DudeController : MonoBehaviour
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, InputManager.Movement);
+            if (_groundObject != null)
+            {
+                _rb.velocity = new Vector3(_rb.velocity.x + _groundObject.GetComponent<VelocityCalculator>().Velocity.x,
+                    _rb.velocity.y + _groundObject.GetComponent<VelocityCalculator>().Velocity.y);
+            }
         }
         else
         {
@@ -102,9 +107,13 @@ public class DudeController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        Vector2 contactPoint = other.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+        if (contactPoint.y < transform.position.y || contactPoint.y > transform.position.y + 0.9f)
+            return;
         if (other.gameObject.tag == "Box" && InputManager.Movement != Vector2.zero && _isGrounded)
         {
             _thingsColliding.Add(other);
+            _anim.SetBool("Pushing", true);
         }
     }
 
@@ -132,6 +141,8 @@ public class DudeController : MonoBehaviour
     #endregion
 
     #region Collision
+
+    private GameObject _groundObject;
     private void IsGrounded()
     {
         Vector2 boxCastOrigin = new Vector2(_feetCollider.bounds.center.x, _feetCollider.bounds.min.y);
@@ -142,13 +153,20 @@ public class DudeController : MonoBehaviour
         {
             _isGrounded = true;
             _anim.SetBool("Grounded", true);
+            _rb.mass = 1f;
             _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
+            if (_groundHit.collider.tag == "Box")
+            {
+                _groundObject = _groundHit.collider.transform.parent.transform.parent.gameObject;
+            }
         }
         else
         {
             _isGrounded = false;
             _anim.SetBool("Grounded", false);
+            _rb.mass = 0f;
             _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            _groundObject = null;
         }
     }
 
@@ -167,6 +185,7 @@ public class DudeController : MonoBehaviour
     private void CollisionChecks()
     {
         IsGrounded();
+        BumpedHead();
     }
     #endregion
 

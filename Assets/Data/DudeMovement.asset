@@ -22,7 +22,7 @@ MonoBehaviour:
     m_Bits: 8
   GroundDetectionRayLength: 0.02
   HeadDetectionRayLength: 0.02
-  HeadWidth: 0.75
+  HeadWidth: 1
   JumpHeight: 1.25
   JumpHeightCompensation: 1
   TimeTillJumpApex: 0.35
