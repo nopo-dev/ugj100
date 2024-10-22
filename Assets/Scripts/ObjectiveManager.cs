@@ -103,6 +103,7 @@ public class ObjectiveManager : MonoBehaviour
         for (int i = 0; i < _boxes.Count; i++)
         {
             _boxes[i].transform.position = _boxStartPositions[i];
+            //_boxes[i].GetComponent<Box>().ResetBox();
         }
     }
 

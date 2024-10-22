@@ -23,24 +23,25 @@ public class MovingPlatform : MonoBehaviour
     private VelocityCalculator _velocityCalc;
     private bool _direction = true;
     private float _moveTimer;
+    private Rigidbody2D _rb;
 
     private void Awake()
     {
         _velocityCalc = GetComponent<VelocityCalculator>();
         _velocityCalc.TrackVelocity = true;
+        _rb = GetComponent<Rigidbody2D>();
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         if (!Move)  return;
 
         _moveTimer += Time.fixedDeltaTime;
-        Debug.Log(_velocityCalc.Velocity);
 
         if (_direction)
-            transform.position = Vector3.Lerp(StartPos, EndPos, _moveTimer / _moveTime);
+            _rb.MovePosition(Vector3.Lerp(StartPos, EndPos, _moveTimer / _moveTime));
         else
-            transform.position = Vector3.Lerp(EndPos, StartPos, _moveTimer / _moveTime);
+            _rb.MovePosition(Vector3.Lerp(EndPos, StartPos, _moveTimer / _moveTime));
 
         if (_moveTimer >= _moveTime)
         {

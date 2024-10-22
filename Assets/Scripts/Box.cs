@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -51,6 +52,7 @@ public class Box : MonoBehaviour
         CollisionChecks();
         Jump();
 
+        Debug.Log(_isGrounded);
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, Vector2.zero);
@@ -62,6 +64,7 @@ public class Box : MonoBehaviour
         else
         {
             Move(MoveStats.AirAcceleration, MoveStats.AirDeceleration, Vector2.zero);
+            //_rb.velocity = new Vector2(0f, _rb.velocity.y);
         }
     }
 
@@ -99,29 +102,37 @@ public class Box : MonoBehaviour
                 {
                     _groundObject = groundHit.collider.transform.parent.transform.parent.gameObject;
                 }
-                // else if (groundHit.collider.tag == "Moving Platform")
-                // {
-                //     _groundObject = groundHit.collider.gameObject;
-                // }
-                if (_groundObject != null)
+                else if (groundHit.collider.tag == "Moving Platform")
                 {
-                    if (_groundObject == gameObject)
-                    {
-                        break;
-                    }
-                    Vector2 contactPoint = groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
-                    transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
+                    _groundObject = groundHit.collider.gameObject;
                 }
+                // if (_groundObject != null)
+                // {
+                //     if (_groundObject == gameObject)
+                //     {
+                //         _groundObject = null;
+                //         continue;
+                //     }
+                // }
+                Vector2 contactPoint = groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+                transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
                 _isGrounded = true;
                 _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
                 break;
             }
-            else
-            {
-                _isGrounded = false;
-                _rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-                _groundObject = null;
-            }
+            // else
+            // {
+            //     // Debug.Log("hitting nothing???");
+            //     _isGrounded = false;
+            //     _rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
+            //     _groundObject = null;
+            // }
+        }
+        if (_groundHits.Length == 0)
+        {
+            _isGrounded = false;
+            _rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
+            _groundObject = null;
         }
     }
 
