@@ -52,7 +52,7 @@ public class Box : MonoBehaviour
         CollisionChecks();
         Jump();
 
-        Debug.Log(_isGrounded);
+        // Debug.Log(_isGrounded);
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, Vector2.zero);
