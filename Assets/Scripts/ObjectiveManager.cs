@@ -10,6 +10,7 @@ public class ObjectiveManager : MonoBehaviour
     [SerializeField] private List<GameObject> _boxes;
     [SerializeField] private GameObject _player;
     [SerializeField] private float _lifetime = 10f;
+    [SerializeField] private float _stasisTime = 5f;
     [SerializeField] private GameObject _mirrorPrefab;
 
 
@@ -80,12 +81,27 @@ public class ObjectiveManager : MonoBehaviour
         StopAllCoroutines();
         ReturnBoxes();
         ReturnMirrors();
-        _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false));
+        _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false, 0f));
         _mirrorPoints.Add(_pointsInTime);
 
         _pointsInTime = new List<InputPoint>();
         _lifeTimer = 0f;
         TimerActive = false;
+    }
+
+    private bool _playerStasis;
+    public void StasisPlayer()
+    {
+        _pointsInTime.Add(new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, _stasisTime));
+        _player.GetComponent<DudeController>().Stasis(_stasisTime);
+        StartCoroutine(PauseTimers());
+    }
+
+    private IEnumerator PauseTimers()
+    {
+        _playerStasis = true;
+        yield return new WaitForSeconds(_stasisTime);
+        _playerStasis = false;
     }
 
     private void ResetLevel()
@@ -126,6 +142,9 @@ public class ObjectiveManager : MonoBehaviour
         {
             StartCoroutine(ResetLevelOnNextTick());
         }
+        if (_playerStasis)
+            return;
+            
         if (InputManager.JumpPressed)
             _jumpPress = true;
         if (InputManager.JumpReleased)
@@ -138,7 +157,7 @@ public class ObjectiveManager : MonoBehaviour
         else if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed) // start and add current active input
         {
             TimerActive = true;
-            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, 0f);
             _jumpPress = false;
             _jumpRelease = false;
             _pointsInTime.Add(_activeInput);
@@ -157,7 +176,7 @@ public class ObjectiveManager : MonoBehaviour
         if (_lifeTimer > 0f)
         {
             // compare current input to active input and add if not same
-            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, 0f);
 
             if (!currentInput.Equals(_activeInput))
             {

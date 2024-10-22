@@ -13,17 +13,23 @@ public class Portal : MonoBehaviour
     {
         _anim = GetComponent<Animator>();
         _acceptedPortals = new List<GameObject>();
-        _sendPosition = new Vector3(_pairedPortal.transform.position.x, _pairedPortal.transform.position.y - 0.5f, 0);
+        _sentPortals = new List<GameObject>();
+        // _sendPosition = new Vector3(_pairedPortal.transform.position.x, _pairedPortal.transform.position.y - 0.5f, 0);
+        _sendPosition = _pairedPortal.transform.position;
     }
+
+    private List<GameObject> _sentPortals;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         GameObject thing = other.transform.parent.transform.parent.gameObject;
-        if (_acceptedPortals.Contains(thing))
+        if (_acceptedPortals.Contains(thing) || _sentPortals.Contains(thing))
             return;
 
+        _sentPortals.Add(thing);
         SendPortal(thing);
-        thing.transform.position = _sendPosition;
+        Vector3 offset = thing.transform.position - transform.position;
+        thing.transform.position = _sendPosition + offset;
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -31,6 +37,8 @@ public class Portal : MonoBehaviour
         GameObject thing = other.transform.parent.transform.parent.gameObject;
         if (_acceptedPortals.Contains(thing))
             _acceptedPortals.Remove(thing);
+        if (_sentPortals.Contains(thing))
+            _sentPortals.Remove(thing);
     }
     
     private void SendPortal(GameObject thing)

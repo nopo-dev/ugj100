@@ -54,12 +54,16 @@ public class DudeController : MonoBehaviour
 
     private void Update()
     {
+        if (_stasis)
+            return;
         JumpChecks();
         CountTimers();
     }
 
     private void FixedUpdate()
     {
+        if (_stasis)
+            return;
         CollisionChecks();
         Jump();
         _anim.SetFloat("YVelocity", VerticalVelocity);
@@ -79,6 +83,29 @@ public class DudeController : MonoBehaviour
         {
             Move(MoveStats.AirAcceleration, MoveStats.AirDeceleration, InputManager.Movement);
         }
+    }
+
+    private bool _stasis;
+    public void Stasis(float time)
+    {
+        _stasis = true;
+        StartCoroutine(StasisSelf(time));
+    }
+
+    private IEnumerator StasisSelf(float time)
+    {
+        Vector2 rbVelocity = _rb.velocity;
+        RigidbodyConstraints2D rbConstraints = _rb.constraints;
+        float animSpeed = _anim.speed;
+
+        _rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        _anim.speed = 0;
+        yield return new WaitForSeconds(time);
+
+        _rb.velocity = rbVelocity;
+        _rb.constraints = rbConstraints;
+        _anim.speed = animSpeed;
+        _stasis = false;
     }
 
     #region Move
