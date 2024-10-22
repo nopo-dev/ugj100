@@ -6,7 +6,7 @@ AnimationClip:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: button idle
+  m_Name: portal idle
   serializedVersion: 7
   m_Legacy: 0
   m_Compressed: 0
@@ -21,11 +21,11 @@ AnimationClip:
   - serializedVersion: 2
     curve:
     - time: 0
-      value: {fileID: 935556985, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
+      value: {fileID: -1811252895, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
     - time: 0.125
-      value: {fileID: 728860478, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
+      value: {fileID: 204296966, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
     - time: 0.25
-      value: {fileID: 1114715789, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
+      value: {fileID: 329433210, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
     attribute: m_Sprite
     path: 
     classID: 212
@@ -48,9 +48,9 @@ AnimationClip:
       isIntCurve: 0
       isSerializeReferenceCurve: 0
     pptrCurveMapping:
-    - {fileID: 935556985, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
-    - {fileID: 728860478, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
-    - {fileID: 1114715789, guid: 3fc4ddfc94ffc1d42841701233bd7c75, type: 3}
+    - {fileID: -1811252895, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
+    - {fileID: 204296966, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
+    - {fileID: 329433210, guid: 2112ce50384a8004d846ceb484bede85, type: 3}
   m_AnimationClipSettings:
     serializedVersion: 2
     m_AdditiveReferencePoseClip: {fileID: 0}
