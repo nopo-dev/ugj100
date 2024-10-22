@@ -88,6 +88,12 @@ public class ObjectiveManager : MonoBehaviour
         TimerActive = false;
     }
 
+    private void ResetLevel()
+    {
+        KillPlayer();
+        ClearMirrorMemory();
+    }
+
     private void ReturnMirrors()
     {
         foreach (GameObject mirror in _mirrors)
@@ -116,6 +122,10 @@ public class ObjectiveManager : MonoBehaviour
     private bool _jumpRelease;
     private void Update()
     {
+        if (InputManager.ResetPressed)
+        {
+            StartCoroutine(ResetLevelOnNextTick());
+        }
         if (InputManager.JumpPressed)
             _jumpPress = true;
         if (InputManager.JumpReleased)
@@ -165,6 +175,12 @@ public class ObjectiveManager : MonoBehaviour
         {
             KillPlayer();
         }
+    }
+
+    private IEnumerator ResetLevelOnNextTick()
+    {
+        yield return new WaitForFixedUpdate();
+        ResetLevel();
     }
 
     private IEnumerator MoveMirror(GameObject mirror, List<InputPoint> mirrorInputs)

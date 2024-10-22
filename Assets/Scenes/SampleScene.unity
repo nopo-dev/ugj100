@@ -1538,7 +1538,7 @@ MonoBehaviour:
   _boxes:
   - {fileID: 386153310}
   _player: {fileID: 1783172587}
-  _lifetime: 100
+  _lifetime: 3
   _mirrorPrefab: {fileID: 5416459578855244635, guid: f02a14ba52704bc45b0607f15027a27a, type: 3}
 --- !u!1 &1397655280 stripped
 GameObject:

@@ -11,9 +11,11 @@ public class InputManager : MonoBehaviour
     public static bool JumpPressed;
     public static bool JumpHeld;
     public static bool JumpReleased;
+    public static bool ResetPressed;
     
     private InputAction _moveAction;
     private InputAction _jumpAction;
+    private InputAction _resetAction;
 
     private void Awake()
     {
@@ -23,7 +25,7 @@ public class InputManager : MonoBehaviour
 
         _moveAction = PlayerInput.actions["Move"];
         _jumpAction = PlayerInput.actions["Jump"];
-
+        _resetAction = PlayerInput.actions["Reset"];
     }
 
     private void Update()
@@ -33,6 +35,8 @@ public class InputManager : MonoBehaviour
         JumpPressed = _jumpAction.WasPressedThisFrame();
         JumpHeld = _jumpAction.IsPressed();
         JumpReleased = _jumpAction.WasReleasedThisFrame();
+
+        ResetPressed = _resetAction.WasPressedThisFrame();
     }
 
 }
