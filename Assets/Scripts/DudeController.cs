@@ -163,6 +163,8 @@ public class DudeController : MonoBehaviour
             {
                 _groundObject = _groundHit.collider.gameObject;
             }
+            Vector2 contactPoint = _groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+            transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
         }
         else
         {

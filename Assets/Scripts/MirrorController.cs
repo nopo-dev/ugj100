@@ -127,7 +127,7 @@ public class MirrorController : MonoBehaviour
         Vector2 boxCastSize = new Vector2(_feetCollider.bounds.size.x, MoveStats.GroundDetectionRayLength);
 
         _groundHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, Vector2.down, MoveStats.GroundDetectionRayLength, MoveStats.GroundLayer);
-        if (_groundHit.collider != null && VerticalVelocity <= 0)
+        if (_groundHit.collider != null && VerticalVelocity <= 0f)
         {
             _isGrounded = true;
             _anim.SetBool("Grounded", true);
@@ -137,6 +137,12 @@ public class MirrorController : MonoBehaviour
             {
                 _groundObject = _groundHit.collider.transform.parent.transform.parent.gameObject;
             }
+            else if (_groundHit.collider.tag == "Moving Platform")
+            {
+                _groundObject = _groundHit.collider.gameObject;
+            }
+            Vector2 contactPoint = _groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
+            transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
         }
         else
         {
@@ -193,6 +199,7 @@ public class MirrorController : MonoBehaviour
     private void CollisionChecks()
     {
         IsGrounded();
+        BumpedHead();
     }
     #endregion
 

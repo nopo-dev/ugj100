@@ -108,6 +108,10 @@ public class ObjectiveManager : MonoBehaviour
     }
 
 
+    private List<InputPoint> _pointsInTime;
+    private List<List<InputPoint>> _mirrorPoints;
+    private List<GameObject> _mirrors;
+    private InputPoint _activeInput;
     private bool _jumpPress;
     private bool _jumpRelease;
     private void Update()
@@ -116,17 +120,10 @@ public class ObjectiveManager : MonoBehaviour
             _jumpPress = true;
         if (InputManager.JumpReleased)
             _jumpRelease = true;
-    }
 
-    private List<InputPoint> _pointsInTime;
-    private List<List<InputPoint>> _mirrorPoints;
-    private List<GameObject> _mirrors;
-    private InputPoint _activeInput;
-    private void FixedUpdate()
-    {
         if (TimerActive) // timer running
         {
-            _lifeTimer += Time.fixedDeltaTime;
+            _lifeTimer += Time.deltaTime;
         }
         else if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed) // start and add current active input
         {
@@ -147,11 +144,7 @@ public class ObjectiveManager : MonoBehaviour
             nextMirror.SetActive(false);
         }
 
-        if (_lifeTimer > _lifetime)
-        {
-            KillPlayer();
-        }
-        else if (_lifeTimer > 0f)
+        if (_lifeTimer > 0f)
         {
             // compare current input to active input and add if not same
             InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
@@ -163,6 +156,14 @@ public class ObjectiveManager : MonoBehaviour
                 _jumpPress = false;
                 _jumpRelease = false;
             }
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        if (_lifeTimer > _lifetime)
+        {
+            KillPlayer();
         }
     }
 
