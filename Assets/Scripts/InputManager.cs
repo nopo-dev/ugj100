@@ -12,10 +12,12 @@ public class InputManager : MonoBehaviour
     public static bool JumpHeld;
     public static bool JumpReleased;
     public static bool ResetPressed;
+    public static bool KillSelfPressed;
     
     private InputAction _moveAction;
     private InputAction _jumpAction;
     private InputAction _resetAction;
+    private InputAction _killAction;
 
     private void Awake()
     {
@@ -26,6 +28,7 @@ public class InputManager : MonoBehaviour
         _moveAction = PlayerInput.actions["Move"];
         _jumpAction = PlayerInput.actions["Jump"];
         _resetAction = PlayerInput.actions["Reset"];
+        _killAction = PlayerInput.actions["KillSelf"];
     }
 
     private void Update()
@@ -37,6 +40,7 @@ public class InputManager : MonoBehaviour
         JumpReleased = _jumpAction.WasReleasedThisFrame();
 
         ResetPressed = _resetAction.WasPressedThisFrame();
+        KillSelfPressed = _killAction.WasPressedThisFrame();
     }
 
 }

@@ -92,19 +92,32 @@ public class DudeController : MonoBehaviour
         StartCoroutine(StasisSelf(time));
     }
 
+    public void Unstasis()
+    {
+        StopAllCoroutines();
+        _anim.speed = _animSpeed;
+        _rb.constraints = _rbConstraints;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
+        _stasis = false;
+    }
+
+    Vector2 _rbVelocity;
+    RigidbodyConstraints2D _rbConstraints;
+    float _animSpeed = 1f;
     private IEnumerator StasisSelf(float time)
     {
-        Vector2 rbVelocity = _rb.velocity;
-        RigidbodyConstraints2D rbConstraints = _rb.constraints;
-        float animSpeed = _anim.speed;
+        _rbVelocity = _rb.velocity;
+        _rbConstraints = _rb.constraints;
 
         _rb.constraints = RigidbodyConstraints2D.FreezeAll;
         _anim.speed = 0;
+        _rb.bodyType = RigidbodyType2D.Static;
         yield return new WaitForSeconds(time);
 
-        _rb.velocity = rbVelocity;
-        _rb.constraints = rbConstraints;
-        _anim.speed = animSpeed;
+        _rb.bodyType = RigidbodyType2D.Dynamic;
+        _rb.velocity = _rbVelocity;
+        _rb.constraints = _rbConstraints;
+        _anim.speed = _animSpeed;
         _stasis = false;
     }
 

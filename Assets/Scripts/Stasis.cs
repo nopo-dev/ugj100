@@ -6,11 +6,11 @@ public class Stasis : MonoBehaviour
 {
     [SerializeField] private ObjectiveManager _objManager;
 
-    private BoxCollider2D _collider;
+    // private BoxCollider2D _collider;
 
     private void Awake()
     {
-        _collider = GetComponent<BoxCollider2D>();
+        // _collider = GetComponent<BoxCollider2D>();
         _thingsColliding = new List<GameObject>();
     }
 
@@ -37,5 +37,11 @@ public class Stasis : MonoBehaviour
     private void StasisTouched()
     {
         _objManager.StasisPlayer();
+        gameObject.SetActive(false);
+    }
+
+    public void Reset()
+    {
+        gameObject.SetActive(true);
     }
 }

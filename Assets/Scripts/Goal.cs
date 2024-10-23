@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class Goal : MonoBehaviour
 {
-    [SerializeField] private Animator _anim;
     [SerializeField] private ObjectiveManager _objManager;
+    private Animator _anim;
 
     private BoxCollider2D _collider;
 

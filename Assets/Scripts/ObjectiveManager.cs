@@ -7,7 +7,7 @@ public class ObjectiveManager : MonoBehaviour
 
     [SerializeField] private List<GameObject> _goals;
     [SerializeField] private GameObject _flag;
-    [SerializeField] private List<GameObject> _boxes;
+    [SerializeField] private List<LevelInteractables> _interactables;
     [SerializeField] private GameObject _player;
     [SerializeField] private float _lifetime = 10f;
     [SerializeField] private float _stasisTime = 5f;
@@ -16,7 +16,7 @@ public class ObjectiveManager : MonoBehaviour
 
     private float _lifeTimer;
     public bool TimerActive { get; set; }
-    private int _currentGoal;
+    public int CurrentLevel = 0;
 
     private void Start()
     {
@@ -24,28 +24,33 @@ public class ObjectiveManager : MonoBehaviour
         {
             _goals[i].GetComponent<Goal>().GoalNum = i;
         }
-        _currentGoal = 0;
-        _goals[_currentGoal].SetActive(true);
+        _goals[CurrentLevel].SetActive(true);
 
-        _boxStartPositions = new List<Vector3>();
-        foreach (GameObject box in _boxes)
-        {
-            _boxStartPositions.Add(box.transform.position);
-        }
+        GetBoxStartPositions();
 
         _pointsInTime = new List<InputPoint>();
         _mirrorPoints = new List<List<InputPoint>>();
         _mirrors = new List<GameObject>();
     }
 
+    private void GetBoxStartPositions()
+    {
+        _boxStartPositions = new List<Vector3>();
+        foreach (GameObject box in _interactables[CurrentLevel].Boxes)
+        {
+            _boxStartPositions.Add(box.transform.position);
+        }
+    }
+
     public void CurrentGoalTouched(int goalNum)
     {
-        if (goalNum == _currentGoal)
+        if (goalNum == CurrentLevel)
         {
             SpawnFlag();
-            NextGoal();
             KillPlayer();
+            NextGoal();
             ClearMirrorMemory();
+            GetBoxStartPositions();
         }
     }
 
@@ -62,15 +67,15 @@ public class ObjectiveManager : MonoBehaviour
 
     private void SpawnFlag()
     {
-        _flag.transform.position = _goals[_currentGoal].transform.position;
+        _flag.transform.position = _goals[CurrentLevel].transform.position;
         _flag.GetComponent<Animator>().SetTrigger("Spawn");
     }
 
     private void NextGoal()
     {
-        if (_currentGoal < _goals.Count - 1)
-            _currentGoal++;
-        _goals[_currentGoal].SetActive(true);
+        if (CurrentLevel < _goals.Count - 1)
+            CurrentLevel++;
+        _goals[CurrentLevel].SetActive(true);
     }
 
     public void KillPlayer()
@@ -80,13 +85,32 @@ public class ObjectiveManager : MonoBehaviour
         _player.transform.position = _flag.transform.position;
         StopAllCoroutines();
         ReturnBoxes();
+        ResetStasises();
+        ResetPlayerStasis();
         ReturnMirrors();
+        ResetMirrorStasises();
         _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false, 0f));
         _mirrorPoints.Add(_pointsInTime);
 
         _pointsInTime = new List<InputPoint>();
         _lifeTimer = 0f;
         TimerActive = false;
+    }
+
+    private void ResetMirrorStasises()
+    {
+        foreach (GameObject mirror in _mirrors)
+        {
+            mirror.GetComponent<MirrorController>().Unstasis();
+        }
+    }
+
+    private void ResetPlayerStasis()
+    {
+        if (!_playerStasis)
+            return;
+        _playerStasis = false;
+        _player.GetComponent<DudeController>().Unstasis();
     }
 
     private bool _playerStasis;
@@ -122,13 +146,19 @@ public class ObjectiveManager : MonoBehaviour
     private List<Vector3> _boxStartPositions;
     private void ReturnBoxes()
     {
-        for (int i = 0; i < _boxes.Count; i++)
+        for (int i = 0; i < _boxStartPositions.Count; i++)
         {
-            _boxes[i].transform.position = _boxStartPositions[i];
-            //_boxes[i].GetComponent<Box>().ResetBox();
+            _interactables[CurrentLevel].Boxes[i].transform.position = _boxStartPositions[i];
         }
     }
 
+    private void ResetStasises()
+    {
+        foreach (GameObject stasis in _interactables[CurrentLevel].Stasises)
+        {
+            stasis.GetComponent<Stasis>().Reset();
+        }
+    }
 
     private List<InputPoint> _pointsInTime;
     private List<List<InputPoint>> _mirrorPoints;
@@ -140,7 +170,11 @@ public class ObjectiveManager : MonoBehaviour
     {
         if (InputManager.ResetPressed)
         {
-            StartCoroutine(ResetLevelOnNextTick());
+            StartCoroutine(ResetLevelNextTick());
+        }
+        if (InputManager.KillSelfPressed)
+        {
+            StartCoroutine(KillSelfNextTick());
         }
         if (_playerStasis)
             return;
@@ -196,14 +230,21 @@ public class ObjectiveManager : MonoBehaviour
         }
     }
 
-    private IEnumerator ResetLevelOnNextTick()
+    private IEnumerator ResetLevelNextTick()
     {
         yield return new WaitForFixedUpdate();
         ResetLevel();
     }
 
+    private IEnumerator KillSelfNextTick()
+    {
+        yield return new WaitForFixedUpdate();
+        KillPlayer();
+    }
+
     private IEnumerator MoveMirror(GameObject mirror, List<InputPoint> mirrorInputs)
     {
+        yield return new WaitForFixedUpdate();
         mirror.transform.position = _player.transform.position;
         mirror.SetActive(true);
         MirrorController mController = mirror.GetComponent<MirrorController>();
