@@ -4,11 +4,12 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    [SerializeField] private GameObject _player;
     [SerializeField] private float _cameraSpeed = 5f;
+
+    public Vector3 Position;
 
     private void Update()
     {
-        transform.position = Vector3.Lerp(transform.position, _player.transform.position, _cameraSpeed * Time.deltaTime);
+        transform.position = Vector3.Lerp(transform.position, Position, _cameraSpeed * Time.deltaTime);
     }
 }
