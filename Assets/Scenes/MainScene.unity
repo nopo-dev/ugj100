@@ -3793,7 +3793,7 @@ MonoBehaviour:
   _stasisEffect: {fileID: 101985310}
   _lifeCountdown: {fileID: 142000014}
   _stasisCountdown: {fileID: 134934109}
-  CurrentLevel: 5
+  CurrentLevel: 0
 --- !u!4 &995102669
 Transform:
   m_ObjectHideFlags: 0

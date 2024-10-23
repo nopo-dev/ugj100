@@ -119,6 +119,7 @@ public class ObjectiveManager : MonoBehaviour
         _lifeTimer = 0f;
         TimerActive = false;
         _lifeCountdown.GetComponent<Timer>().ResetCountdown();
+        _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
         _stasisCountdown.SetActive(false);
     }
 
@@ -275,7 +276,7 @@ public class ObjectiveManager : MonoBehaviour
 
     private IEnumerator MoveMirror(GameObject mirror, List<InputPoint> mirrorInputs)
     {
-        yield return new WaitForFixedUpdate();
+        // yield return new WaitForFixedUpdate();
         mirror.transform.position = _player.transform.position;
         mirror.SetActive(true);
         MirrorController mController = mirror.GetComponent<MirrorController>();
