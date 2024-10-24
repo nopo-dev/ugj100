@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,6 +18,7 @@ public class ObjectiveManager : MonoBehaviour
     [SerializeField] private GameObject _stasisEffect;
     [SerializeField] private GameObject _lifeCountdown;
     [SerializeField] private GameObject _stasisCountdown;
+    [SerializeField] private float _rewindLength = 3f;
 
     private float _lifeTimer;
     public bool TimerActive { get; set; }
@@ -35,6 +37,10 @@ public class ObjectiveManager : MonoBehaviour
         _pointsInTime = new List<InputPoint>();
         _mirrorPoints = new List<List<InputPoint>>();
         _mirrors = new List<GameObject>();
+        _playerPStates = new List<PositionState>();
+        _mirrorPStates = new List<List<PositionState>>();
+        _lifeCountdownPStates = new List<PositionState>();
+        InitializeBoxPStateList();
     }
 
     private void StasisBubble()
@@ -68,18 +74,48 @@ public class ObjectiveManager : MonoBehaviour
         if (goalNum == CurrentLevel)
         {
             SpawnFlag();
-            KillPlayer();
+            StopAllCoroutines();
+            ResetStasises();
+            ResetStasisBubble();
+            ResetPlayerStasis();
+            ResetMirrorStasises();
+
+            _player.transform.position = _flag.transform.position;
+            ReturnMirrors();
+
+            _lifeTimer = 0f;
+            TimerActive = false;
+            _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
+            _lifeCountdown.GetComponent<Timer>().ResetCountdown();
+            _stasisCountdown.SetActive(false);
+
+            _playerPStates = new List<PositionState>();
+            _player.GetComponent<DudeController>().ForwardAnimations();
+            _rewinding = false;
+
             NextGoal();
             MoveCamera(CurrentLevel);
             ClearMirrorMemory();
             GetBoxStartPositions();
+            InitializeBoxPStateList();
         }
+    }
+
+    private void InitializeBoxPStateList()
+    {
+        _boxPStates = new List<List<PositionState>>(_interactables[CurrentLevel].Boxes.Count);
+        for (int i = 0; i < _interactables[CurrentLevel].Boxes.Count; i++)
+        {
+            _boxPStates.Add(new List<PositionState>());
+        }
+
     }
 
     private void ClearMirrorMemory()
     {
         _pointsInTime = new List<InputPoint>();
         _mirrorPoints = new List<List<InputPoint>>();
+        _mirrorPStates = new List<List<PositionState>>();
         foreach (GameObject mirror in _mirrors)
         {
             Destroy(mirror);
@@ -102,25 +138,106 @@ public class ObjectiveManager : MonoBehaviour
 
     public void KillPlayer()
     {
-        if (!TimerActive)
-            return;
-        _player.transform.position = _flag.transform.position;
         StopAllCoroutines();
-        ReturnBoxes();
         ResetStasises();
         ResetStasisBubble();
         ResetPlayerStasis();
-        ReturnMirrors();
         ResetMirrorStasises();
+
+        StartCoroutine(RewindPlayer());
+    }
+
+    private List<PositionState> _playerPStates;
+    private float InverseSmoothStep(float time)
+    {
+        float x = time / _lifeTimer;
+        return (x + (x - (x * x * (3f - 2f * x)))) * _rewindLength;
+    }
+
+    private bool _rewinding;
+    private IEnumerator RewindPlayer()
+    {
+        _rewinding = true;
+
+        if (TimerActive)
+        {
+            _player.GetComponent<DudeController>().ReverseAnimations();
+            foreach (GameObject mirror in _mirrors)
+            {
+                mirror.GetComponent<MirrorController>().ReverseAnimations();
+            }
+
+            int playerPStateIndex = _playerPStates.Count - 1;
+            for (float time = _rewindLength; time >= 0; time -= Time.deltaTime)
+            {
+                for (int i = playerPStateIndex; i >= 0; i--)
+                {
+                    if (InverseSmoothStep(_playerPStates[i].TimeInLife) <= time)
+                    {
+                        _player.transform.position = _playerPStates[i].Position;
+                        _player.GetComponent<DudeController>().SetAnimatorState(_playerPStates[i].AnimatorState);
+
+                        // handle mirrors here also
+                        for (int m = 0; m < _mirrorPStates.Count; m++)
+                        {
+                            if (i >= _mirrorPStates[m].Count)
+                                break;
+                            _mirrors[m].transform.position = _mirrorPStates[m][i].Position;
+                            _mirrors[m].GetComponent<MirrorController>().SetAnimatorState(_mirrorPStates[m][i].AnimatorState);
+                        }
+
+                        // handle boxes here too
+                        for (int b = 0; b < _boxPStates.Count; b++)
+                        {
+                            if (i >= _boxPStates[b].Count)
+                                break;
+                            _interactables[CurrentLevel].Boxes[b].transform.position = _boxPStates[b][i].Position;
+                        }
+
+                        // handle lifecountdown ui
+                        _lifeCountdown.GetComponent<Timer>().SetAnimatorState(_lifeCountdownPStates[i].AnimatorState);
+
+                        playerPStateIndex = i;
+                        break;
+                    }
+                }
+                yield return null;
+            }
+        }        
+        
+        _player.transform.position = _flag.transform.position;
+        ReturnMirrors();
+        ReturnBoxes();
+
         _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false, 0f));
         _mirrorPoints.Add(_pointsInTime);
+        _mirrorPStates = new List<List<PositionState>>(_mirrorPoints.Count);
+        for (int i = 0; i < _mirrorPoints.Count; i++)
+        {
+            _mirrorPStates.Add(new List<PositionState>());
+        }
+        InitializeBoxPStateList();
 
         _pointsInTime = new List<InputPoint>();
         _lifeTimer = 0f;
         TimerActive = false;
-        _lifeCountdown.GetComponent<Timer>().ResetCountdown();
         _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
-        _stasisCountdown.SetActive(false);
+        _lifeCountdown.GetComponent<Timer>().ResetCountdown();
+        _lifeCountdownPStates = new List<PositionState>();
+
+        _playerPStates = new List<PositionState>();
+        _player.GetComponent<DudeController>().ForwardAnimations();
+        foreach (GameObject mirror in _mirrors)
+        {
+            mirror.GetComponent<MirrorController>().ForwardAnimations();
+        }
+        
+        if (_clearMirrorsOnKillPlayer)
+        {
+            ClearMirrorMemory();
+            _clearMirrorsOnKillPlayer = false;
+        }
+        _rewinding = false;
     }
 
     private void ResetMirrorStasises()
@@ -136,7 +253,7 @@ public class ObjectiveManager : MonoBehaviour
         if (!_playerStasis)
             return;
         _playerStasis = false;
-        _stasisCountdown.SetActive(true);
+        _stasisCountdown.SetActive(false);
         _player.GetComponent<DudeController>().Unstasis();
     }
 
@@ -159,10 +276,11 @@ public class ObjectiveManager : MonoBehaviour
         _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
     }
 
+    private bool _clearMirrorsOnKillPlayer;
     private void ResetLevel()
     {
+        _clearMirrorsOnKillPlayer = true;
         KillPlayer();
-        ClearMirrorMemory();
     }
 
     private void ReturnMirrors()
@@ -170,7 +288,7 @@ public class ObjectiveManager : MonoBehaviour
         foreach (GameObject mirror in _mirrors)
         {
             mirror.SetActive(false);
-            mirror.transform.position = _player.transform.position;
+            mirror.transform.position = _flag.transform.position;
         }
     }
 
@@ -193,17 +311,22 @@ public class ObjectiveManager : MonoBehaviour
 
     private List<InputPoint> _pointsInTime;
     private List<List<InputPoint>> _mirrorPoints;
+    private List<List<PositionState>> _mirrorPStates;
+    private List<PositionState> _lifeCountdownPStates;
+    private List<List<PositionState>> _boxPStates;
     private List<GameObject> _mirrors;
     private InputPoint _activeInput;
     private bool _jumpPress;
     private bool _jumpRelease;
     private void Update()
     {
+        if (_rewinding)
+            return;
         if (InputManager.ResetPressed)
         {
             StartCoroutine(ResetLevelNextTick());
         }
-        if (InputManager.KillSelfPressed)
+        if (InputManager.KillSelfPressed && TimerActive)
         {
             StartCoroutine(KillSelfNextTick());
         }
@@ -218,6 +341,16 @@ public class ObjectiveManager : MonoBehaviour
         if (TimerActive) // timer running
         {
             _lifeTimer += Time.deltaTime;
+            _playerPStates.Add(new PositionState(_lifeTimer, _player.transform.position, _player.GetComponent<DudeController>().GetAnimatorState()));
+            for (int i = 0; i < _mirrorPStates.Count; i++)
+            {
+                _mirrorPStates[i].Add(new PositionState(_lifeTimer, _mirrors[i].transform.position, _mirrors[i].GetComponent<MirrorController>().GetAnimatorState()));
+            }
+            for (int i = 0; i < _interactables[CurrentLevel].Boxes.Count; i++)
+            {
+                _boxPStates[i].Add(new PositionState(_lifeTimer, _interactables[CurrentLevel].Boxes[i].transform.position));
+            }
+            _lifeCountdownPStates.Add(new PositionState(_lifeTimer, _lifeCountdown.GetComponent<Timer>().GetAnimatorState()));
         }
         else if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed) // start and add current active input
         {
@@ -256,6 +389,9 @@ public class ObjectiveManager : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (_rewinding)
+            return;
+
         if (_lifeTimer > _lifetime)
         {
             KillPlayer();

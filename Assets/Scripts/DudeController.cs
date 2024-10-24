@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
+using UnityEditor.Animations;
 using UnityEngine;
 
 public class DudeController : MonoBehaviour
@@ -99,6 +101,33 @@ public class DudeController : MonoBehaviour
         _rb.constraints = _rbConstraints;
         _rb.bodyType = RigidbodyType2D.Dynamic;
         _stasis = false;
+    }
+
+    public void ReverseAnimations()
+    {
+        _anim.speed = 0f;
+        GetComponentInChildren<BoxCollider2D>().enabled = false;
+        GetComponentInChildren<CapsuleCollider2D>().enabled = false;
+        _rb.simulated = false;
+    }
+
+    public void ForwardAnimations()
+    {
+        _anim.speed = 1f;
+        GetComponentInChildren<BoxCollider2D>(true).enabled = true;
+        GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;
+        _rb.simulated = true;
+    }
+
+    public void SetAnimatorState((int, float, bool) animatorState)
+    {
+        _anim.Play(animatorState.Item1, 0, animatorState.Item2);
+        GetComponent<SpriteRenderer>().flipX = !animatorState.Item3;
+    }
+
+    public (int, float, bool) GetAnimatorState()
+    {
+        return new (_anim.GetCurrentAnimatorStateInfo(0).fullPathHash, _anim.GetCurrentAnimatorStateInfo(0).normalizedTime, _isFacingRight);
     }
 
     Vector2 _rbVelocity;

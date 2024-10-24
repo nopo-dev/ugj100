@@ -46,7 +46,7 @@
                 {
                     "name": "WASD",
                     "id": "d426c25a-895b-41fb-9c91-66123c53aa7c",
-                    "path": "2DVector",
+                    "path": "2DVector(mode=1)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -101,7 +101,7 @@
                 {
                     "name": "Arrow Keys",
                     "id": "cad60680-3816-451c-9cef-985c99a43b35",
-                    "path": "2DVector",
+                    "path": "2DVector(mode=1)",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
