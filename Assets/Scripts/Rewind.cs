@@ -32,13 +32,13 @@ public class Rewind : MonoBehaviour
         _anim.speed = speed;
     }
 
-    // public void ShowRewind()
-    // {
-    //     GetComponent<SpriteRenderer>().enabled = true;
-    // }
+    public void ShowRewind()
+    {
+        GetComponent<SpriteRenderer>().enabled = true;
+    }
 
-    // public void HideRewind()
-    // {
-    //     GetComponent<SpriteRenderer>().enabled = false;
-    // }
+    public void HideRewind()
+    {
+        GetComponent<SpriteRenderer>().enabled = false;
+    }
 }

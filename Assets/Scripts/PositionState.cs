@@ -6,7 +6,6 @@ public class PositionState
 {
     
     public float TimeInLife;
-
     public Vector3 Position;
     public (int, float, bool) AnimatorState;
 

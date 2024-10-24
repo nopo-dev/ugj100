@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ObjectiveManager : MonoBehaviour
@@ -28,7 +29,7 @@ public class ObjectiveManager : MonoBehaviour
 
     private void Start()
     {
-        for (int i = 0; i < _goals.Count - 1; i++)
+        for (int i = 0; i < _goals.Count; i++)
         {
             _goals[i].GetComponent<Goal>().GoalNum = i;
         }
@@ -44,7 +45,12 @@ public class ObjectiveManager : MonoBehaviour
         _lifeCountdownPStates = new List<PositionState>();
         InitializeBoxPStateList();
 
-        _rewind.PlayPlay();
+        _rewind.HideRewind();
+        //_rewind.PlayPlay();
+
+        _bigPlayerPStates = new List<List<PositionState>>();
+        _bigMirrorPStates = new List<List<List<PositionState>>>();
+        _bigBoxPStates = new List<List<List<PositionState>>>();
     }
 
     private void StasisBubble()
@@ -84,6 +90,9 @@ public class ObjectiveManager : MonoBehaviour
             ResetPlayerStasis();
             ResetMirrorStasises();
 
+            // add pstates to big lists before they get cleared
+            AddPStatesToBigLists();
+
             _player.transform.position = _flag.transform.position;
             ReturnMirrors();
 
@@ -99,11 +108,8 @@ public class ObjectiveManager : MonoBehaviour
             _rewinding = false;
 
             _mirrorCount.RemoveAllCounters();
-            NextGoal();
-            MoveCamera(CurrentLevel);
             ClearMirrorMemory();
-            GetBoxStartPositions();
-            InitializeBoxPStateList();
+            NextGoal();
         }
     }
 
@@ -114,11 +120,14 @@ public class ObjectiveManager : MonoBehaviour
         {
             _boxPStates.Add(new List<PositionState>());
         }
-
     }
 
+    private int _maxMirrorsUsed;
     private void ClearMirrorMemory()
     {
+        if (_mirrors.Count > _maxMirrorsUsed)
+            _maxMirrorsUsed = _mirrors.Count;
+
         _pointsInTime = new List<InputPoint>();
         _mirrorPoints = new List<List<InputPoint>>();
         _mirrorPStates = new List<List<PositionState>>();
@@ -135,11 +144,177 @@ public class ObjectiveManager : MonoBehaviour
         _flag.GetComponent<Animator>().SetTrigger("Spawn");
     }
 
+    private bool _lastGoalTouched;
     private void NextGoal()
     {
-        if (CurrentLevel < _goals.Count - 1)
+        if (CurrentLevel + 1 < _goals.Count)
+        {
             CurrentLevel++;
-        _goals[CurrentLevel].SetActive(true);
+            _goals[CurrentLevel].SetActive(true);
+            MoveCamera(CurrentLevel);
+            GetBoxStartPositions();
+            InitializeBoxPStateList();
+            return;
+        }
+        
+        if (_lastGoalTouched == false)
+        {
+            LastGoalTouched();
+            _lastGoalTouched = true;
+        }
+    }
+
+    private List<List<PositionState>> _bigPlayerPStates;
+    private List<List<List<PositionState>>> _bigMirrorPStates;
+    private List<List<List<PositionState>>> _bigBoxPStates;
+
+    private void LastGoalTouched()
+    {
+        StartCoroutine(BigRewind());
+    }
+
+    [SerializeField]private float _bigRewindLength = 5f;
+    private IEnumerator BigRewind()
+    {
+        _rewinding = true;
+        _bigRewinding = true;
+        _deathCounter.DisplayNumber();
+        _mirrorCount.RemoveAllCounters();
+        _lifeCountdown.SetActive(false);
+        _stasisCountdown.SetActive(false);
+        _rewind.ShowRewind();
+        _rewind.PlayReset();
+
+        for (int i = _mirrors.Count; i < _maxMirrorsUsed; i++)
+        {
+            _mirrors.Add(Instantiate(_mirrorPrefab, new Vector3(-10f, -10f, 0f), Quaternion.identity));
+        }
+
+        _player.GetComponent<DudeController>().ReverseAnimations();
+        foreach (GameObject mirror in _mirrors)
+        {
+            mirror.GetComponent<MirrorController>().ReverseAnimations();
+        }
+
+        // whats the idea here
+        // iterate through bigplayerpstatesbackwards (list of lists)
+        // for each list in bigpstates do the rewind
+        int levelIndex = _bigPlayerPStates.Count - 1;
+        int totalDeaths = _deathCount;
+        int playerPStateIndex = _bigPlayerPStates.LastOrDefault().Count - 1;
+        float maxLifeTimer = _bigPlayerPStates.LastOrDefault().LastOrDefault().TimeInLife;
+        for (float time = _bigRewindLength; time >= 0; time -= Time.deltaTime)
+        {
+            _rewind.SetAnimSpeed(QuadraticSmoothing(time, _bigRewindLength));
+            if ((int) (time / _bigRewindLength * totalDeaths) < _deathCount)
+            {
+                _deathCount--;
+                _deathCounter.UpdateNumber(_deathCount);
+            }
+
+            _playerPStates = _bigPlayerPStates[levelIndex];
+            _mirrorPStates = _bigMirrorPStates[levelIndex];
+            _boxPStates = _bigBoxPStates[levelIndex];
+            playerPStateIndex = _playerPStates.Count - 1;
+
+            for (int i = playerPStateIndex; i >= 0; i--)
+            {
+                if (InverseSmoothStep(_playerPStates[i].TimeInLife, maxLifeTimer, _bigRewindLength) <= time)
+                {
+                    _player.transform.position = _playerPStates[i].Position;
+                    _player.GetComponent<DudeController>().SetAnimatorState(_playerPStates[i].AnimatorState);
+
+                    // handle mirrors here also
+                    for (int m = 0; m < _mirrorPStates.Count; m++)
+                    {
+                        if (i >= _mirrorPStates[m].Count)
+                            break;
+                        _mirrors[m].transform.position = _mirrorPStates[m][i].Position;
+                        _mirrors[m].SetActive(true);
+                        _mirrors[m].GetComponent<MirrorController>().SetAnimatorState(_mirrorPStates[m][i].AnimatorState);
+                    }
+
+                    // handle boxes here too
+                    for (int b = 0; b < _boxPStates.Count; b++)
+                    {
+                        if (i >= _boxPStates[b].Count)
+                            break;
+                        _interactables[levelIndex].Boxes[b].transform.position = _boxPStates[b][i].Position;
+                    }
+
+                    playerPStateIndex = i;
+                    break;
+                }
+                if (i == 0)
+                {
+                    levelIndex--;
+                    if (levelIndex >= 0)
+                        MoveCamera(levelIndex);
+                    break;
+                }
+            }
+            if (levelIndex == -1)   break;
+            yield return null;
+        }
+        _player.transform.position = new Vector3(-4f, 0f, 0f);
+        ClearMirrorMemory();
+        _gameFinished = true;
+        StartCoroutine(RollCredits());
+    }
+
+    [SerializeField] private GameObject _blackScreen;
+    [SerializeField] private GameObject _titleText;
+    [SerializeField] private GameObject _creditText;
+    private IEnumerator RollCredits()
+    {
+        yield return new WaitForSeconds(3f);
+        _deathCounter.GetComponent<DeathCounter>().HideNumber();
+        _blackScreen.SetActive(true);
+
+        yield return new WaitForSeconds(2f);
+        _titleText.SetActive(true);
+
+        yield return new WaitForSeconds(5f);
+        _creditText.SetActive(true);
+    }
+
+    private bool _gameFinished;
+
+    // at the end of each level, add playerpstates, list mirrorpstates, boxpstates to biglists
+    private void AddPStatesToBigLists()
+    {
+        // make sure to add old player max timeinlife to lists being added
+        float previousPlayerTime = 0f;
+        if (_bigPlayerPStates.Count > 0)
+        {
+            previousPlayerTime = _bigPlayerPStates.LastOrDefault().LastOrDefault().TimeInLife;
+        }
+
+        _bigPlayerPStates.Add(AdjustTime(_playerPStates, previousPlayerTime));
+
+        List<List<PositionState>> temp = new List<List<PositionState>>();
+        foreach (List<PositionState> pState in _mirrorPStates)
+        {
+            temp.Add(AdjustTime(pState, previousPlayerTime));
+        }
+        _bigMirrorPStates.Add(temp);
+
+        temp = new List<List<PositionState>>();
+        foreach (List<PositionState> pState in _boxPStates)
+        {
+            temp.Add(AdjustTime(pState, previousPlayerTime));
+        }
+        _bigBoxPStates.Add(_boxPStates);
+    }
+
+    private List<PositionState> AdjustTime(List<PositionState> pStates, float timeOffset)
+    {
+        List<PositionState> adjustedPStates = new List<PositionState>();
+        foreach (PositionState pState in pStates)
+        {
+            adjustedPStates.Add(new PositionState(pState.TimeInLife + timeOffset, pState.Position, pState.AnimatorState));
+        }
+        return adjustedPStates;
     }
 
     public void KillPlayer()
@@ -156,16 +331,23 @@ public class ObjectiveManager : MonoBehaviour
     private int _deathCount = 0;
     [SerializeField] private DeathCounter _deathCounter;
 
-    private float QuadraticSmoothing(float time)
+    private bool _bigRewinding;
+    private float QuadraticSmoothing(float time, float rewindLength)
     {
-        float x = time / _rewindLength;
-        return (-4f * x * x + 4f * x) * _lifeTimer / _lifetime;
+        float x = time / rewindLength;
+        // lifetimer / lifetime = scalar to determine rewind animation speed
+        // equivalent to how long you took over how much time you had
+        // rewinds faster when you took more time out of available time
+
+        float result = -4f * x * x + 4f * x;
+        if (!_bigRewinding) result *= _lifeTimer / _lifetime;
+        return result;
     }
 
-    private float InverseSmoothStep(float time)
+    private float InverseSmoothStep(float time, float lifeTimer, float rewindLength)
     {
-        float x = time / _lifeTimer;
-        return (x + (x - (x * x * (3f - 2f * x)))) * _rewindLength;
+        float x = time / lifeTimer;
+        return (x + (x - (x * x * (3f - 2f * x)))) * rewindLength;
     }
 
     private bool _rewinding;
@@ -175,7 +357,7 @@ public class ObjectiveManager : MonoBehaviour
         _rewinding = true;
         _deathCounter.DisplayNumber();
         _mirrorCount.ShowMirrorCount();
-        // _rewind.ShowRewind();
+        _rewind.ShowRewind();
         int mirrorCounters = 0;
         if (_clearMirrorsOnKillPlayer)
         {
@@ -195,7 +377,7 @@ public class ObjectiveManager : MonoBehaviour
         int mirrorCountIndex = mirrorCounters;
         for (float time = _rewindLength; time >= 0; time -= Time.deltaTime)
         {
-            _rewind.SetAnimSpeed(QuadraticSmoothing(time));
+            _rewind.SetAnimSpeed(QuadraticSmoothing(time, _rewindLength));
             if (time <= 0.66f * _rewindLength && !updatedDeath)
             {
                 updatedDeath = true;
@@ -213,7 +395,7 @@ public class ObjectiveManager : MonoBehaviour
             }
             for (int i = playerPStateIndex; i >= 0; i--)
             {
-                if (InverseSmoothStep(_playerPStates[i].TimeInLife) <= time)
+                if (InverseSmoothStep(_playerPStates[i].TimeInLife, _lifeTimer, _rewindLength) <= time)
                 {
                     _player.transform.position = _playerPStates[i].Position;
                     _player.GetComponent<DudeController>().SetAnimatorState(_playerPStates[i].AnimatorState);
@@ -244,8 +426,8 @@ public class ObjectiveManager : MonoBehaviour
             }
             yield return null;
         }
-        // _rewind.HideRewind();
-        _rewind.PlayPlay();
+        _rewind.HideRewind();
+        //_rewind.PlayPlay();
         _deathCounter.DelayHideNumber();
         _mirrorCount.DelayHideMirrorCount();
         _player.transform.position = _flag.transform.position;
@@ -363,7 +545,7 @@ public class ObjectiveManager : MonoBehaviour
     private bool _jumpRelease;
     private void Update()
     {
-        if (_rewinding)
+        if (_rewinding || _gameFinished)
             return;
         if (InputManager.ResetPressed)
         {
@@ -436,7 +618,7 @@ public class ObjectiveManager : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (_rewinding)
+        if (_rewinding || _gameFinished)
             return;
 
         if (_lifeTimer > _lifetime)
