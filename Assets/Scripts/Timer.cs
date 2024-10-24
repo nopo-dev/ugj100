@@ -13,21 +13,18 @@ public class Timer : MonoBehaviour
 
     public void StartCountdown()
     {
-        _anim.SetTrigger("Start");
-        StartCoroutine(ResetTriggers());
+        StartCoroutine(DelayStartCountdown());
+    }
+
+    private IEnumerator DelayStartCountdown()
+    {
+        yield return null;
+        _anim.Play("timer countdown", 0);
     }
 
     public void ResetCountdown()
     {
-        _anim.SetTrigger("Reset");
-        StartCoroutine(ResetTriggers());
-    }
-
-    private IEnumerator ResetTriggers()
-    {
-        yield return null;
-        _anim.ResetTrigger("Start");
-        _anim.ResetTrigger("Reset");
+        _anim.Play("timer idle 10", 0);
     }
 
     public void PauseCountdown()

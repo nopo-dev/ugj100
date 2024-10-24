@@ -18,6 +18,8 @@ public class ObjectiveManager : MonoBehaviour
     [SerializeField] private GameObject _stasisEffect;
     [SerializeField] private GameObject _lifeCountdown;
     [SerializeField] private GameObject _stasisCountdown;
+    [SerializeField] private Rewind _rewind;
+    [SerializeField] private MirrorCount _mirrorCount;
     [SerializeField] private float _rewindLength = 3f;
 
     private float _lifeTimer;
@@ -41,6 +43,8 @@ public class ObjectiveManager : MonoBehaviour
         _mirrorPStates = new List<List<PositionState>>();
         _lifeCountdownPStates = new List<PositionState>();
         InitializeBoxPStateList();
+
+        _rewind.PlayPlay();
     }
 
     private void StasisBubble()
@@ -87,12 +91,14 @@ public class ObjectiveManager : MonoBehaviour
             TimerActive = false;
             _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
             _lifeCountdown.GetComponent<Timer>().ResetCountdown();
+            _lifeCountdownPStates = new List<PositionState>();
             _stasisCountdown.SetActive(false);
 
             _playerPStates = new List<PositionState>();
             _player.GetComponent<DudeController>().ForwardAnimations();
             _rewinding = false;
 
+            _mirrorCount.RemoveAllCounters();
             NextGoal();
             MoveCamera(CurrentLevel);
             ClearMirrorMemory();
@@ -147,7 +153,15 @@ public class ObjectiveManager : MonoBehaviour
         StartCoroutine(RewindPlayer());
     }
 
-    private List<PositionState> _playerPStates;
+    private int _deathCount = 0;
+    [SerializeField] private DeathCounter _deathCounter;
+
+    private float QuadraticSmoothing(float time)
+    {
+        float x = time / _rewindLength;
+        return (-4f * x * x + 4f * x) * _lifeTimer / _lifetime;
+    }
+
     private float InverseSmoothStep(float time)
     {
         float x = time / _lifeTimer;
@@ -155,56 +169,85 @@ public class ObjectiveManager : MonoBehaviour
     }
 
     private bool _rewinding;
+    private List<PositionState> _playerPStates;
     private IEnumerator RewindPlayer()
     {
         _rewinding = true;
-
-        if (TimerActive)
+        _deathCounter.DisplayNumber();
+        _mirrorCount.ShowMirrorCount();
+        // _rewind.ShowRewind();
+        int mirrorCounters = 0;
+        if (_clearMirrorsOnKillPlayer)
         {
-            _player.GetComponent<DudeController>().ReverseAnimations();
-            foreach (GameObject mirror in _mirrors)
-            {
-                mirror.GetComponent<MirrorController>().ReverseAnimations();
-            }
+            _rewind.PlayReset();
+            mirrorCounters = _mirrorCount.GetMirrorCount();
+        }
+        else    _rewind.PlayRewind();
 
-            int playerPStateIndex = _playerPStates.Count - 1;
-            for (float time = _rewindLength; time >= 0; time -= Time.deltaTime)
+        _player.GetComponent<DudeController>().ReverseAnimations();
+        foreach (GameObject mirror in _mirrors)
+        {
+            mirror.GetComponent<MirrorController>().ReverseAnimations();
+        }
+
+        bool updatedDeath = false;
+        int playerPStateIndex = _playerPStates.Count - 1;
+        int mirrorCountIndex = mirrorCounters;
+        for (float time = _rewindLength; time >= 0; time -= Time.deltaTime)
+        {
+            _rewind.SetAnimSpeed(QuadraticSmoothing(time));
+            if (time <= 0.66f * _rewindLength && !updatedDeath)
             {
-                for (int i = playerPStateIndex; i >= 0; i--)
+                updatedDeath = true;
+                _deathCount++;
+                _deathCounter.UpdateNumber(_deathCount);
+                if (!_clearMirrorsOnKillPlayer) _mirrorCount.AddCounter();
+            }
+            if (_clearMirrorsOnKillPlayer && mirrorCounters > 0)
+            {
+                if ((int) (time / _rewindLength * mirrorCounters) < mirrorCountIndex)
                 {
-                    if (InverseSmoothStep(_playerPStates[i].TimeInLife) <= time)
-                    {
-                        _player.transform.position = _playerPStates[i].Position;
-                        _player.GetComponent<DudeController>().SetAnimatorState(_playerPStates[i].AnimatorState);
-
-                        // handle mirrors here also
-                        for (int m = 0; m < _mirrorPStates.Count; m++)
-                        {
-                            if (i >= _mirrorPStates[m].Count)
-                                break;
-                            _mirrors[m].transform.position = _mirrorPStates[m][i].Position;
-                            _mirrors[m].GetComponent<MirrorController>().SetAnimatorState(_mirrorPStates[m][i].AnimatorState);
-                        }
-
-                        // handle boxes here too
-                        for (int b = 0; b < _boxPStates.Count; b++)
-                        {
-                            if (i >= _boxPStates[b].Count)
-                                break;
-                            _interactables[CurrentLevel].Boxes[b].transform.position = _boxPStates[b][i].Position;
-                        }
-
-                        // handle lifecountdown ui
-                        _lifeCountdown.GetComponent<Timer>().SetAnimatorState(_lifeCountdownPStates[i].AnimatorState);
-
-                        playerPStateIndex = i;
-                        break;
-                    }
+                    _mirrorCount.RemoveCounter();
+                    mirrorCountIndex--;
                 }
-                yield return null;
             }
-        }        
-        
+            for (int i = playerPStateIndex; i >= 0; i--)
+            {
+                if (InverseSmoothStep(_playerPStates[i].TimeInLife) <= time)
+                {
+                    _player.transform.position = _playerPStates[i].Position;
+                    _player.GetComponent<DudeController>().SetAnimatorState(_playerPStates[i].AnimatorState);
+
+                    // handle mirrors here also
+                    for (int m = 0; m < _mirrorPStates.Count; m++)
+                    {
+                        if (i >= _mirrorPStates[m].Count)
+                            break;
+                        _mirrors[m].transform.position = _mirrorPStates[m][i].Position;
+                        _mirrors[m].GetComponent<MirrorController>().SetAnimatorState(_mirrorPStates[m][i].AnimatorState);
+                    }
+
+                    // handle boxes here too
+                    for (int b = 0; b < _boxPStates.Count; b++)
+                    {
+                        if (i >= _boxPStates[b].Count)
+                            break;
+                        _interactables[CurrentLevel].Boxes[b].transform.position = _boxPStates[b][i].Position;
+                    }
+
+                    // handle lifecountdown ui
+                    _lifeCountdown.GetComponent<Timer>().SetAnimatorState(_lifeCountdownPStates[i].AnimatorState);
+
+                    playerPStateIndex = i;
+                    break;
+                }
+            }
+            yield return null;
+        }
+        // _rewind.HideRewind();
+        _rewind.PlayPlay();
+        _deathCounter.DelayHideNumber();
+        _mirrorCount.DelayHideMirrorCount();
         _player.transform.position = _flag.transform.position;
         ReturnMirrors();
         ReturnBoxes();
@@ -354,6 +397,10 @@ public class ObjectiveManager : MonoBehaviour
         }
         else if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed) // start and add current active input
         {
+            _deathCounter.HideNumber();
+            _deathCounter.StopAllCoroutines();
+            _mirrorCount.HideMirrorCount();
+            _mirrorCount.StopAllCoroutines();
             TimerActive = true;
             _lifeCountdown.GetComponent<Timer>().StartCountdown();
             _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, 0f);
