@@ -180,8 +180,8 @@ public class ObjectiveManager : MonoBehaviour
         _bigRewinding = true;
         _deathCounter.DisplayNumber();
         _mirrorCount.RemoveAllCounters();
-        _lifeCountdown.SetActive(false);
-        _stasisCountdown.SetActive(false);
+        _lifeCountdown.GetComponent<SpriteRenderer>().enabled = false;
+        _stasisCountdown.GetComponent<SpriteRenderer>().enabled = false;
         _rewind.ShowRewind();
         _rewind.PlayReset();
 
