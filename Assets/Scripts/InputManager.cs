@@ -22,7 +22,7 @@ public class InputManager : MonoBehaviour
     private void Awake()
     {
         // QualitySettings.vSyncCount = 0;
-        // Application.targetFrameRate = 60;
+        // Application.targetFrameRate = 100;
         PlayerInput = GetComponent<PlayerInput>();
 
         _moveAction = PlayerInput.actions["Move"];

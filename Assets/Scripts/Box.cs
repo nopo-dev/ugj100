@@ -86,6 +86,25 @@ public class Box : MonoBehaviour
     }
     #endregion
 
+    public void ReverseAnimations()
+    {
+        foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
+            b.enabled = false;
+        _rb.simulated = false;
+    }
+
+    public void ForwardAnimations()
+    {
+        foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
+            b.enabled = true;
+        _rb.simulated = true;
+    }
+
+    public void ResetGroundObject()
+    {
+        _groundObject = null;
+    }
+
     private GameObject _groundObject;
     #region Collision
     private void IsGrounded()
@@ -106,27 +125,13 @@ public class Box : MonoBehaviour
                 {
                     _groundObject = groundHit.collider.gameObject;
                 }
-                // if (_groundObject != null)
-                // {
-                //     if (_groundObject == gameObject)
-                //     {
-                //         _groundObject = null;
-                //         continue;
-                //     }
-                // }
                 Vector2 contactPoint = groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
                 transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
+                transform.position = new Vector3(transform.position.x, contactPoint.y, transform.position.z);
                 _isGrounded = true;
                 _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
                 break;
             }
-            // else
-            // {
-            //     // Debug.Log("hitting nothing???");
-            //     _isGrounded = false;
-            //     _rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
-            //     _groundObject = null;
-            // }
         }
         if (_groundHits.Length == 0)
         {

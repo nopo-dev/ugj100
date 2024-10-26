@@ -9,25 +9,23 @@ public class InputPoint
     public Vector2 MovementInput;
     public bool JumpPressed;
     public bool JumpReleased;
-    public float StasisTime;
 
-    public InputPoint(float inputTime, Vector2 movementInput, bool jumpPressed, bool jumpReleased, float stasisTime)
+    public InputPoint(float inputTime, Vector2 movementInput, bool jumpPressed, bool jumpReleased)
     {
         InputTime = inputTime;
         MovementInput = movementInput;
         JumpPressed = jumpPressed;
         JumpReleased = jumpReleased;
-        StasisTime = stasisTime;
     }
 
     public override string ToString()
     {
-        return "(" + MovementInput.x + ", " + MovementInput.y + ") " + JumpPressed + " " + JumpReleased + " " + StasisTime;
+        return InputTime + " (" + MovementInput.x + ", " + MovementInput.y + ") " + JumpPressed + " " + JumpReleased;
     }
 
     public bool Equals(InputPoint other)
     {
         return other.MovementInput == MovementInput && other.JumpPressed == JumpPressed &&
-            other.JumpReleased == JumpReleased && other.StasisTime == StasisTime;
+            other.JumpReleased == JumpReleased;
     }
 }

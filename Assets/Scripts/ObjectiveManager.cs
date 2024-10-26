@@ -16,7 +16,7 @@ public class ObjectiveManager : MonoBehaviour
     [SerializeField] private float _lifetime = 10f;
     [SerializeField] private float _stasisTime = 5f;
     [SerializeField] private GameObject _mirrorPrefab;
-    [SerializeField] private GameObject _stasisEffect;
+    [SerializeField] private GameObject _stasisBubblePrefab;
     [SerializeField] private GameObject _lifeCountdown;
     [SerializeField] private GameObject _stasisCountdown;
     [SerializeField] private Rewind _rewind;
@@ -51,18 +51,25 @@ public class ObjectiveManager : MonoBehaviour
         _bigPlayerPStates = new List<List<PositionState>>();
         _bigMirrorPStates = new List<List<List<PositionState>>>();
         _bigBoxPStates = new List<List<List<PositionState>>>();
+        _stasisBubbles = new List<GameObject>();
     }
 
-    private void StasisBubble()
+    private List<GameObject> _stasisBubbles;
+    private void StasisBubble(Vector3 bubblePosition)
     {
-        _stasisEffect.transform.position = _player.transform.position + Vector3.up * 0.5f;
-        _stasisEffect.GetComponent<StasisBubble>().Stasis(_stasisTime);
+        GameObject bubble = Instantiate(_stasisBubblePrefab, bubblePosition, Quaternion.identity);
+        bubble.GetComponent<StasisBubble>().Stasis(_stasisTime);
+        _stasisBubbles.Add(bubble);
     }
 
-    private void ResetStasisBubble()
+    private void ResetStasisBubbles()
     {
-        if (_playerStasis)
-            _stasisEffect.GetComponent<StasisBubble>().ResetBubble();
+        foreach (GameObject bubble in _stasisBubbles)
+        {
+            if (bubble != null)
+                bubble.GetComponent<StasisBubble>().ResetBubble();
+        }
+        _stasisBubbles = new List<GameObject>();
     }
 
     private void MoveCamera(int level)
@@ -85,8 +92,7 @@ public class ObjectiveManager : MonoBehaviour
         {
             SpawnFlag();
             StopAllCoroutines();
-            ResetStasises();
-            ResetStasisBubble();
+            ResetStasisBubbles();
             ResetPlayerStasis();
             ResetMirrorStasises();
 
@@ -256,8 +262,10 @@ public class ObjectiveManager : MonoBehaviour
             if (levelIndex == -1)   break;
             yield return null;
         }
+        _player.GetComponent<DudeController>().ForwardAnimations();
         _player.transform.position = new Vector3(-4f, 0f, 0f);
         ClearMirrorMemory();
+        ResetStasises();
         _gameFinished = true;
         StartCoroutine(RollCredits());
     }
@@ -321,7 +329,7 @@ public class ObjectiveManager : MonoBehaviour
     {
         StopAllCoroutines();
         ResetStasises();
-        ResetStasisBubble();
+        ResetStasisBubbles();
         ResetPlayerStasis();
         ResetMirrorStasises();
 
@@ -366,10 +374,15 @@ public class ObjectiveManager : MonoBehaviour
         }
         else    _rewind.PlayRewind();
 
-        _player.GetComponent<DudeController>().ReverseAnimations();
+        if (_playerPStates.Count > 0)   _player.GetComponent<DudeController>().ReverseAnimations();
         foreach (GameObject mirror in _mirrors)
         {
             mirror.GetComponent<MirrorController>().ReverseAnimations();
+        }
+
+        foreach (GameObject box in _interactables[CurrentLevel].Boxes)
+        {
+            box.GetComponent<Box>().ReverseAnimations();
         }
 
         bool updatedDeath = false;
@@ -434,7 +447,7 @@ public class ObjectiveManager : MonoBehaviour
         ReturnMirrors();
         ReturnBoxes();
 
-        _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false, 0f));
+        _pointsInTime.Add(new InputPoint(_lifeTimer, new Vector2(0f, 0f), false, false));
         _mirrorPoints.Add(_pointsInTime);
         _mirrorPStates = new List<List<PositionState>>(_mirrorPoints.Count);
         for (int i = 0; i < _mirrorPoints.Count; i++)
@@ -482,14 +495,30 @@ public class ObjectiveManager : MonoBehaviour
         _player.GetComponent<DudeController>().Unstasis();
     }
 
+    // stasis timeline
+    // 1. thing collides with stasis
+    // 2. stasis tells objmanager to either stasis player or stasis mirror
+    // 3. objmanager performs stasis on player/mirror
+    // 3a. if player, pause timers
+    // 4. objmanager spawns stasis bubble on stasis
+    // 5. start coroutine to tick bubble size down gradually for 4.9ish seconds, last 0.1ish snap closed
+    // 
+
     private bool _playerStasis;
-    public void StasisPlayer()
+    public void StasisPlayer(Vector3 bubblePosition)
     {
-        _pointsInTime.Add(new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, _stasisTime));
+        // _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, _stasisTime);
+        // _pointsInTime.Add(_activeInput);
         _player.GetComponent<DudeController>().Stasis(_stasisTime);
-        StasisBubble();
-        _stasisCountdown.SetActive(true);
+        StasisBubble(bubblePosition);
+        // _stasisCountdown.SetActive(true);
         StartCoroutine(PauseTimers());
+    }
+
+    public void StasisMirror(GameObject mirror, Vector3 bubblePosition)
+    {
+        mirror.GetComponent<MirrorController>().Stasis(_stasisTime);
+        StasisBubble(bubblePosition);
     }
 
     private IEnumerator PauseTimers()
@@ -523,6 +552,8 @@ public class ObjectiveManager : MonoBehaviour
         for (int i = 0; i < _boxStartPositions.Count; i++)
         {
             _interactables[CurrentLevel].Boxes[i].transform.position = _boxStartPositions[i];
+            _interactables[CurrentLevel].Boxes[i].GetComponent<Box>().ResetGroundObject();
+            _interactables[CurrentLevel].Boxes[i].GetComponent<Box>().ForwardAnimations();
         }
     }
 
@@ -585,7 +616,7 @@ public class ObjectiveManager : MonoBehaviour
             _mirrorCount.StopAllCoroutines();
             TimerActive = true;
             _lifeCountdown.GetComponent<Timer>().StartCountdown();
-            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, 0f);
+            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
             _jumpPress = false;
             _jumpRelease = false;
             _pointsInTime.Add(_activeInput);
@@ -604,14 +635,14 @@ public class ObjectiveManager : MonoBehaviour
         if (_lifeTimer > 0f)
         {
             // compare current input to active input and add if not same
-            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, 0f);
+            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
 
             if (!currentInput.Equals(_activeInput))
             {
                 _pointsInTime.Add(currentInput);
                 _activeInput = currentInput;
                 _jumpPress = false;
-                _jumpRelease = false;
+                _jumpRelease = false;;
             }
         }
     }
@@ -648,7 +679,10 @@ public class ObjectiveManager : MonoBehaviour
 
         for (int i = 0; i < mirrorInputs.Count; i++)
         {
+            if (mController.IsStasis)
+                yield return new WaitForSeconds(_stasisTime);
             mController.SetInput(mirrorInputs[i]);
+            // if (mirrorInputs[i].StasisTime != 0f)   yield return new WaitForFixedUpdate();
             if (i < mirrorInputs.Count - 1)
                 yield return new WaitForSeconds(mirrorInputs[i + 1].InputTime - mirrorInputs[i].InputTime);
         }

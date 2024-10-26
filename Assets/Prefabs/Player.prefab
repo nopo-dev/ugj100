@@ -79,7 +79,7 @@ GameObject:
   - component: {fileID: 1511280143044114987}
   m_Layer: 6
   m_Name: Feet
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -142,7 +142,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.3, y: 0.083376765}
+  m_Size: {x: 0.29, y: 0.083376765}
   m_EdgeRadius: 0
 --- !u!1 &7497734608157145080
 GameObject:
@@ -306,7 +306,7 @@ GameObject:
   - component: {fileID: 6608914990754112367}
   m_Layer: 6
   m_Name: Colliders
-  m_TagString: Player
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

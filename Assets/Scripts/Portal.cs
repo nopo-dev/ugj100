@@ -29,7 +29,9 @@ public class Portal : MonoBehaviour
         _sentPortals.Add(thing);
         SendPortal(thing);
         Vector3 offset = thing.transform.position - transform.position;
-        thing.transform.position = _sendPosition + offset;
+        // offset = new Vector3(offset.x * 0.5f, offset.y, offset.z);
+        thing.transform.position = _sendPosition - Vector3.up * 0.5f; // + offset;
+        thing.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
     private void OnTriggerExit2D(Collider2D other)

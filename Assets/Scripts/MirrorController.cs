@@ -62,17 +62,15 @@ public class MirrorController : MonoBehaviour
     private Vector2 _moveInput;
     private bool _jumpPress;
     private bool _jumpRelease;
-    private float _stasisTime;
+    public bool IsStasis
+    {
+        get { return _stasis; }
+    }
     public void SetInput(InputPoint inputPoint)
     {
         _moveInput = inputPoint.MovementInput;
         _jumpPress = inputPoint.JumpPressed;
         _jumpRelease = inputPoint.JumpReleased;
-        _stasisTime = inputPoint.StasisTime;
-        if (_stasisTime != 0f)
-        {
-            Stasis(_stasisTime);
-        }
     }
 
     private void FixedUpdate()
@@ -217,6 +215,7 @@ public class MirrorController : MonoBehaviour
             }
             Vector2 contactPoint = _groundHit.collider.gameObject.GetComponent<Collider2D>().ClosestPoint(transform.position);
             transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
+            transform.position = new Vector3(transform.position.x, contactPoint.y, transform.position.z);
         }
         else
         {

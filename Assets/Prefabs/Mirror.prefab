@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3693664306039935777}
   m_Layer: 6
   m_Name: Feet
-  m_TagString: Mirror
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -306,7 +306,7 @@ GameObject:
   - component: {fileID: 2947224735916540776}
   m_Layer: 6
   m_Name: Colliders
-  m_TagString: Mirror
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
