@@ -13,6 +13,7 @@ public class ObjectiveManager : MonoBehaviour
     [SerializeField] private CameraController _camera;
     [SerializeField] private List<LevelInteractables> _interactables;
     [SerializeField] private GameObject _player;
+    [SerializeField] private AudioManager _audioManager;
     [SerializeField] private float _lifetime = 10f;
     [SerializeField] private float _stasisTime = 5f;
     [SerializeField] private GameObject _mirrorPrefab;
@@ -88,7 +89,7 @@ public class ObjectiveManager : MonoBehaviour
 
     public void CurrentGoalTouched(int goalNum)
     {
-        if (goalNum == CurrentLevel)
+        if (goalNum == CurrentLevel && CurrentLevel + 1 < _goals.Count)
         {
             SpawnFlag();
             StopAllCoroutines();
@@ -117,6 +118,41 @@ public class ObjectiveManager : MonoBehaviour
             ClearMirrorMemory();
             NextGoal();
         }
+        else
+        {
+            StartCoroutine(PreBigRewind());
+        }
+    }
+
+    private bool _preGameFinish;
+    private IEnumerator PreBigRewind()
+    {
+        _preGameFinish = true;
+        SpawnFlag();
+        _lifeCountdown.GetComponent<SpriteRenderer>().enabled = false;
+
+        _player.GetComponent<Animator>().Play("dude final");
+        yield return new WaitForSeconds(5f);
+        StopAllCoroutines();
+        ResetStasisBubbles();
+        ResetPlayerStasis();
+        ResetMirrorStasises();
+        AddPStatesToBigLists();
+        ReturnMirrors();
+        _lifeTimer = 0f;
+        TimerActive = false;
+        _lifeCountdown.GetComponent<Timer>().UnpauseCountdown();
+        _lifeCountdown.GetComponent<Timer>().ResetCountdown();
+        _lifeCountdownPStates = new List<PositionState>();
+        _stasisCountdown.SetActive(false);
+
+        _playerPStates = new List<PositionState>();
+        _player.GetComponent<DudeController>().ForwardAnimations();
+        _rewinding = false;
+
+        _mirrorCount.RemoveAllCounters();
+        ClearMirrorMemory();
+        NextGoal();
     }
 
     private void InitializeBoxPStateList()
@@ -253,6 +289,7 @@ public class ObjectiveManager : MonoBehaviour
                 }
                 if (i == 0)
                 {
+                    _goals[levelIndex].SetActive(true);
                     levelIndex--;
                     if (levelIndex >= 0)
                         MoveCamera(levelIndex);
@@ -267,6 +304,7 @@ public class ObjectiveManager : MonoBehaviour
         ClearMirrorMemory();
         ResetStasises();
         _gameFinished = true;
+        _goals[0].SetActive(true);
         StartCoroutine(RollCredits());
     }
 
@@ -363,6 +401,7 @@ public class ObjectiveManager : MonoBehaviour
     private IEnumerator RewindPlayer()
     {
         _rewinding = true;
+        _player.GetComponent<DudeController>().ResetGroundObject();
         _deathCounter.DisplayNumber();
         _mirrorCount.ShowMirrorCount();
         _rewind.ShowRewind();
@@ -476,6 +515,7 @@ public class ObjectiveManager : MonoBehaviour
             _clearMirrorsOnKillPlayer = false;
         }
         _rewinding = false;
+        _gameStartCoroutine = null;
     }
 
     private void ResetMirrorStasises()
@@ -509,6 +549,7 @@ public class ObjectiveManager : MonoBehaviour
     {
         // _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease, _stasisTime);
         // _pointsInTime.Add(_activeInput);
+        _audioManager.Play("Stasis");
         _player.GetComponent<DudeController>().Stasis(_stasisTime);
         StasisBubble(bubblePosition);
         // _stasisCountdown.SetActive(true);
@@ -517,6 +558,7 @@ public class ObjectiveManager : MonoBehaviour
 
     public void StasisMirror(GameObject mirror, Vector3 bubblePosition)
     {
+        _audioManager.Play("Stasis");
         mirror.GetComponent<MirrorController>().Stasis(_stasisTime);
         StasisBubble(bubblePosition);
     }
@@ -541,6 +583,7 @@ public class ObjectiveManager : MonoBehaviour
     {
         foreach (GameObject mirror in _mirrors)
         {
+            mirror.GetComponent<MirrorController>().ResetGroundObject();
             mirror.SetActive(false);
             mirror.transform.position = _flag.transform.position;
         }
@@ -572,8 +615,8 @@ public class ObjectiveManager : MonoBehaviour
     private List<List<PositionState>> _boxPStates;
     private List<GameObject> _mirrors;
     private InputPoint _activeInput;
-    private bool _jumpPress;
-    private bool _jumpRelease;
+    // private bool _jumpPress;
+    // private bool _jumpRelease;
     private void Update()
     {
         if (_rewinding || _gameFinished)
@@ -589,10 +632,10 @@ public class ObjectiveManager : MonoBehaviour
         if (_playerStasis)
             return;
             
-        if (InputManager.JumpPressed)
-            _jumpPress = true;
-        if (InputManager.JumpReleased)
-            _jumpRelease = true;
+        // if (InputManager.JumpPressed)
+        //     _jumpPress = true;
+        // if (InputManager.JumpReleased)
+        //     _jumpRelease = true;
 
         if (TimerActive) // timer running
         {
@@ -616,43 +659,58 @@ public class ObjectiveManager : MonoBehaviour
             _mirrorCount.StopAllCoroutines();
             TimerActive = true;
             _lifeCountdown.GetComponent<Timer>().StartCountdown();
-            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
-            _jumpPress = false;
-            _jumpRelease = false;
+            // _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            // _jumpPress = false;
+            // _jumpRelease = false;
+            _activeInput = new InputPoint(_lifeTimer, InputManager.Movement, InputManager.JumpPressed, InputManager.JumpReleased);
             _pointsInTime.Add(_activeInput);
-
             // replay mirrors
             for (int i = 0; i < _mirrors.Count; i++)
             {
-                 StartCoroutine(MoveMirror(_mirrors[i], _mirrorPoints[i]));
+                StartCoroutine(MoveMirror(_mirrors[i], _mirrorPoints[i]));
             }
 
             GameObject nextMirror = Instantiate(_mirrorPrefab);
             _mirrors.Add(nextMirror);
             nextMirror.SetActive(false);
+            GameObject thing = Instantiate(_staticRb);
+            thing.transform.position += Vector3.up;
+            Destroy(thing);
+            // if (_gameStartCoroutine == null)
+            //     _gameStartCoroutine = StartCoroutine(StartPlayingNextTick());
         }
 
         if (_lifeTimer > 0f)
         {
             // compare current input to active input and add if not same
-            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            // InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, _jumpPress, _jumpRelease);
+            InputPoint currentInput = new InputPoint(_lifeTimer, InputManager.Movement, InputManager.JumpPressed, InputManager.JumpReleased);
 
             if (!currentInput.Equals(_activeInput))
             {
                 _pointsInTime.Add(currentInput);
                 _activeInput = currentInput;
-                _jumpPress = false;
-                _jumpRelease = false;;
+                // _jumpPress = false;
+                // _jumpRelease = false;
             }
         }
     }
+
+    private Coroutine _gameStartCoroutine;
+    private IEnumerator StartPlayingNextTick()
+    {
+        yield return new WaitForFixedUpdate();
+        
+    }
+
+    [SerializeField] private GameObject _staticRb;
 
     private void FixedUpdate()
     {
         if (_rewinding || _gameFinished)
             return;
 
-        if (_lifeTimer > _lifetime)
+        if (_lifeTimer > _lifetime && !_preGameFinish)
         {
             KillPlayer();
         }

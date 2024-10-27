@@ -88,16 +88,16 @@ public class Box : MonoBehaviour
 
     public void ReverseAnimations()
     {
-        foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
-            b.enabled = false;
-        _rb.simulated = false;
+        // foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
+        //     b.enabled = false;
+        // _rb.simulated = false;
     }
 
     public void ForwardAnimations()
     {
-        foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
-            b.enabled = true;
-        _rb.simulated = true;
+        // foreach (BoxCollider2D b in GetComponentsInChildren<BoxCollider2D>())
+        //     b.enabled = true;
+        // _rb.simulated = true;
     }
 
     public void ResetGroundObject()
@@ -129,6 +129,7 @@ public class Box : MonoBehaviour
                 transform.position = new Vector3(transform.position.x, contactPoint.y + 0.015f, transform.position.z);
                 transform.position = new Vector3(transform.position.x, contactPoint.y, transform.position.z);
                 _isGrounded = true;
+                //_rb.mass = 1f;
                 _rb.constraints = RigidbodyConstraints2D.FreezePositionY | RigidbodyConstraints2D.FreezeRotation;
                 break;
             }
@@ -136,6 +137,7 @@ public class Box : MonoBehaviour
         if (_groundHits.Length == 0)
         {
             _isGrounded = false;
+            //_rb.mass = 100f;
             _rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
             _groundObject = null;
         }

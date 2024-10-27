@@ -117,16 +117,20 @@ public class MirrorController : MonoBehaviour
     public void ReverseAnimations()
     {
         _anim.speed = 0f;
-        GetComponentInChildren<BoxCollider2D>().enabled = false;
-        GetComponentInChildren<CapsuleCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = false;
+        // GetComponentInChildren<BoxCollider2D>().enabled = false;
+        // GetComponentInChildren<CapsuleCollider2D>().enabled = false;
         _rb.simulated = false;
     }
 
     public void ForwardAnimations()
     {
         _anim.speed = 1f;
-        GetComponentInChildren<BoxCollider2D>(true).enabled = true;
-        GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;
+        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = true;
+        // GetComponentInChildren<BoxCollider2D>(true).enabled = true;
+        // GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;
         _rb.simulated = true;
     }
 
@@ -146,9 +150,10 @@ public class MirrorController : MonoBehaviour
     float _animSpeed = 1f;
     private IEnumerator StasisSelf(float time)
     {
-        yield return new WaitForFixedUpdate();
+        // yield return new WaitForFixedUpdate();
         _rbVelocity = _rb.velocity;
         _rbConstraints = _rb.constraints;
+        _rb.mass = 1f;
 
         _rb.constraints = RigidbodyConstraints2D.FreezeAll;
         _anim.speed = 0;
@@ -158,6 +163,7 @@ public class MirrorController : MonoBehaviour
         _rb.bodyType = RigidbodyType2D.Dynamic;
         _rb.velocity = _rbVelocity;
         _rb.constraints = _rbConstraints;
+        _rb.mass = 0f;
         _anim.speed = _animSpeed;
         _stasis = false;
     }
@@ -192,6 +198,12 @@ public class MirrorController : MonoBehaviour
     #endregion
 
     #region Collision
+
+    public void ResetGroundObject()
+    {
+        _groundObject = null;
+    }
+
     private GameObject _groundObject;
     private void IsGrounded()
     {

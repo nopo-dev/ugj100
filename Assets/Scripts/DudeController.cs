@@ -53,6 +53,8 @@ public class DudeController : MonoBehaviour
         _thingsColliding = new List<Collider2D>();
     }
 
+    private bool _firstMove;
+
     private void Update()
     {
         if (_stasis)
@@ -70,7 +72,14 @@ public class DudeController : MonoBehaviour
         _anim.SetFloat("YVelocity", VerticalVelocity);
         if (InputManager.Movement == Vector2.zero || _thingsColliding.Count == 0)
             _anim.SetBool("Pushing", false);
+        
+        // if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed)
+        // {
+        //     StartCoroutine(AllowMovementNextTick());
+        // }
 
+        // if (!_firstMove)
+        //     return;
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, InputManager.Movement);
@@ -84,6 +93,12 @@ public class DudeController : MonoBehaviour
         {
             Move(MoveStats.AirAcceleration, MoveStats.AirDeceleration, InputManager.Movement);
         }
+    }
+
+    private IEnumerator AllowMovementNextTick()
+    {
+        yield return new WaitForFixedUpdate();
+        _firstMove = true;
     }
 
     private bool _stasis;
@@ -105,16 +120,20 @@ public class DudeController : MonoBehaviour
     public void ReverseAnimations()
     {
         _anim.speed = 0f;
-        GetComponentInChildren<BoxCollider2D>().enabled = false;
-        GetComponentInChildren<CapsuleCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = false;
+        // GetComponentInChildren<BoxCollider2D>().enabled = false;
+        // GetComponentInChildren<CapsuleCollider2D>().enabled = false;
         _rb.simulated = false;
     }
 
     public void ForwardAnimations()
     {
         _anim.speed = 1f;
-        GetComponentInChildren<BoxCollider2D>(true).enabled = true;
-        GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;
+        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = true;
+        // GetComponentInChildren<BoxCollider2D>(true).enabled = true;
+        // GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;
         _rb.simulated = true;
     }
 
@@ -136,6 +155,7 @@ public class DudeController : MonoBehaviour
     {
         _rbVelocity = _rb.velocity;
         _rbConstraints = _rb.constraints;
+        //_rb.mass = 1f;
 
         _rb.constraints = RigidbodyConstraints2D.FreezeAll;
         _anim.speed = 0;
@@ -145,6 +165,7 @@ public class DudeController : MonoBehaviour
         _rb.bodyType = RigidbodyType2D.Dynamic;
         _rb.velocity = _rbVelocity;
         _rb.constraints = _rbConstraints;
+        //_rb.mass = 0f;
         _anim.speed = _animSpeed;
         _stasis = false;
     }
@@ -209,6 +230,11 @@ public class DudeController : MonoBehaviour
     #endregion
 
     #region Collision
+
+    public void ResetGroundObject()
+    {
+        _groundObject = null;
+    }
 
     private GameObject _groundObject;
     private void IsGrounded()

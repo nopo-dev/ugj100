@@ -127,7 +127,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -148,7 +148,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -169,7 +169,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -190,7 +190,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 384
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -211,7 +211,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 512
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -232,7 +232,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 640
-        y: 384
+        y: 640
         width: 128
         height: 128
       alignment: 7
@@ -253,7 +253,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 256
+        y: 512
         width: 128
         height: 128
       alignment: 7
@@ -274,7 +274,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 256
+        y: 512
         width: 128
         height: 128
       alignment: 7
@@ -295,7 +295,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 256
+        y: 512
         width: 128
         height: 128
       alignment: 7
@@ -316,7 +316,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 384
-        y: 256
+        y: 512
         width: 128
         height: 128
       alignment: 7
@@ -337,7 +337,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 512
-        y: 256
+        y: 512
         width: 128
         height: 128
       alignment: 7
@@ -358,7 +358,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 128
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -379,7 +379,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 128
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -400,7 +400,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 128
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -421,7 +421,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 384
-        y: 128
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -441,8 +441,8 @@ TextureImporter:
       name: dude_15
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
+        x: 512
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -462,8 +462,8 @@ TextureImporter:
       name: dude_16
       rect:
         serializedVersion: 2
-        x: 128
-        y: 0
+        x: 640
+        y: 384
         width: 128
         height: 128
       alignment: 7
@@ -483,8 +483,8 @@ TextureImporter:
       name: dude_17
       rect:
         serializedVersion: 2
-        x: 256
-        y: 0
+        x: 0
+        y: 256
         width: 128
         height: 128
       alignment: 7
@@ -504,8 +504,8 @@ TextureImporter:
       name: dude_18
       rect:
         serializedVersion: 2
-        x: 384
-        y: 0
+        x: 128
+        y: 256
         width: 128
         height: 128
       alignment: 7
@@ -525,8 +525,8 @@ TextureImporter:
       name: dude_19
       rect:
         serializedVersion: 2
-        x: 512
-        y: 0
+        x: 256
+        y: 256
         width: 128
         height: 128
       alignment: 7
@@ -546,8 +546,8 @@ TextureImporter:
       name: dude_20
       rect:
         serializedVersion: 2
-        x: 512
-        y: 128
+        x: 384
+        y: 256
         width: 128
         height: 128
       alignment: 7
@@ -567,8 +567,8 @@ TextureImporter:
       name: dude_21
       rect:
         serializedVersion: 2
-        x: 640
-        y: 129
+        x: 512
+        y: 256
         width: 128
         height: 128
       alignment: 7
@@ -580,6 +580,258 @@ TextureImporter:
       bones: []
       spriteID: b578e717078e2c24c80a8c90ca96ba38
       internalID: -992754993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_22
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0eb59d0e23d65b94db86cbb00b8e21b0
+      internalID: -1162892133
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_23
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 1e206d5be86b90d45a740b8bdcf8b5ce
+      internalID: -2053622409
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_24
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 28e3c93501a4a50479b331b8ae3e9a41
+      internalID: -123019013
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_25
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 209093444f21a8845ab8ff16f7857cab
+      internalID: -884451864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_26
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ad74b2bd2b31d154c8f7fda0c74e84a8
+      internalID: 319869888
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_27
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 128
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f9d702bf132590c4a95dcfbd571c8b6d
+      internalID: 330654805
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_28
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: dfc31a335e01eae42b3397960e182426
+      internalID: 579761606
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_29
+      rect:
+        serializedVersion: 2
+        x: 128
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 892ca93a3ea99ef4e9660a3bfb7ca9d4
+      internalID: 850874802
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_30
+      rect:
+        serializedVersion: 2
+        x: 256
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: df8b91328eac56f4eb639a42a02349fe
+      internalID: 1283291757
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_31
+      rect:
+        serializedVersion: 2
+        x: 384
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3e9f21108207bc74e9f00479fba78c27
+      internalID: 20841830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_32
+      rect:
+        serializedVersion: 2
+        x: 512
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: def7ae278516c4947b7b7b8084f48fb8
+      internalID: -1558315798
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dude_33
+      rect:
+        serializedVersion: 2
+        x: 640
+        y: 0
+        width: 128
+        height: 128
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2811179a1b8bf0e44ba7dd128c1c4eba
+      internalID: 1292005911
       vertices: []
       indices: 
       edges: []
@@ -610,7 +862,19 @@ TextureImporter:
       dude_2: -891146086
       dude_20: -2102722989
       dude_21: -992754993
+      dude_22: -1162892133
+      dude_23: -2053622409
+      dude_24: -123019013
+      dude_25: -884451864
+      dude_26: 319869888
+      dude_27: 330654805
+      dude_28: 579761606
+      dude_29: 850874802
       dude_3: -709027913
+      dude_30: 1283291757
+      dude_31: 20841830
+      dude_32: -1558315798
+      dude_33: 1292005911
       dude_4: -1749659506
       dude_5: -1501298172
       dude_6: -1622738325
