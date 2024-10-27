@@ -53,6 +53,7 @@ public class ObjectiveManager : MonoBehaviour
         _bigMirrorPStates = new List<List<List<PositionState>>>();
         _bigBoxPStates = new List<List<List<PositionState>>>();
         _stasisBubbles = new List<GameObject>();
+        _player.GetComponent<DudeController>().AllowMovement = true;
     }
 
     private List<GameObject> _stasisBubbles;
@@ -96,6 +97,7 @@ public class ObjectiveManager : MonoBehaviour
             ResetStasisBubbles();
             ResetPlayerStasis();
             ResetMirrorStasises();
+            _audioManager.FadeOut("Stasis");
 
             // add pstates to big lists before they get cleared
             AddPStatesToBigLists();
@@ -120,6 +122,7 @@ public class ObjectiveManager : MonoBehaviour
         }
         else
         {
+            _player.GetComponent<DudeController>().AllowMovement = false;
             StartCoroutine(PreBigRewind());
         }
     }
@@ -183,6 +186,7 @@ public class ObjectiveManager : MonoBehaviour
     private void SpawnFlag()
     {
         _flag.transform.position = _goals[CurrentLevel].transform.position;
+        _audioManager.Play("Flag Raise");
         _flag.GetComponent<Animator>().SetTrigger("Spawn");
     }
 
@@ -226,6 +230,7 @@ public class ObjectiveManager : MonoBehaviour
         _stasisCountdown.GetComponent<SpriteRenderer>().enabled = false;
         _rewind.ShowRewind();
         _rewind.PlayReset();
+        _audioManager.Play("5s Rewind");
 
         for (int i = _mirrors.Count; i < _maxMirrorsUsed; i++)
         {
@@ -412,6 +417,8 @@ public class ObjectiveManager : MonoBehaviour
             mirrorCounters = _mirrorCount.GetMirrorCount();
         }
         else    _rewind.PlayRewind();
+        _audioManager.Play("Rewind");
+        _audioManager.FadeOut("Stasis");
 
         if (_playerPStates.Count > 0)   _player.GetComponent<DudeController>().ReverseAnimations();
         foreach (GameObject mirror in _mirrors)

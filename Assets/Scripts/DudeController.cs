@@ -57,29 +57,37 @@ public class DudeController : MonoBehaviour
 
     private void Update()
     {
-        if (_stasis)
+        if (_stasis || !_allowMovement)
             return;
         JumpChecks();
         CountTimers();
     }
 
+    public bool AllowMovement
+    {
+        get
+        {
+            return _allowMovement;
+        }
+        set
+        {
+            _allowMovement = value;
+            if (!value)
+                _rb.constraints = RigidbodyConstraints2D.FreezeAll;
+        }
+    }
+    private bool _allowMovement;
+
     private void FixedUpdate()
     {
-        if (_stasis)
+        if (_stasis || !_allowMovement)
             return;
         CollisionChecks();
         Jump();
         _anim.SetFloat("YVelocity", VerticalVelocity);
         if (InputManager.Movement == Vector2.zero || _thingsColliding.Count == 0)
             _anim.SetBool("Pushing", false);
-        
-        // if (InputManager.Movement != Vector2.zero || InputManager.JumpPressed)
-        // {
-        //     StartCoroutine(AllowMovementNextTick());
-        // }
 
-        // if (!_firstMove)
-        //     return;
         if (_isGrounded)
         {
             Move(MoveStats.GroundAcceleration, MoveStats.GroundDeceleration, InputManager.Movement);
@@ -120,7 +128,8 @@ public class DudeController : MonoBehaviour
     public void ReverseAnimations()
     {
         _anim.speed = 0f;
-        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        // transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(0).GetComponent<CapsuleCollider2D>().enabled = false;
         transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = false;
         // GetComponentInChildren<BoxCollider2D>().enabled = false;
         // GetComponentInChildren<CapsuleCollider2D>().enabled = false;
@@ -130,7 +139,8 @@ public class DudeController : MonoBehaviour
     public void ForwardAnimations()
     {
         _anim.speed = 1f;
-        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        // transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        transform.GetChild(0).GetChild(0).GetComponent<CapsuleCollider2D>().enabled = true;
         transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = true;
         // GetComponentInChildren<BoxCollider2D>(true).enabled = true;
         // GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;

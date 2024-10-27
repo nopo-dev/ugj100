@@ -117,7 +117,8 @@ public class MirrorController : MonoBehaviour
     public void ReverseAnimations()
     {
         _anim.speed = 0f;
-        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        // transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = false;
+        transform.GetChild(0).GetChild(0).GetComponent<CapsuleCollider2D>().enabled = false;
         transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = false;
         // GetComponentInChildren<BoxCollider2D>().enabled = false;
         // GetComponentInChildren<CapsuleCollider2D>().enabled = false;
@@ -127,7 +128,8 @@ public class MirrorController : MonoBehaviour
     public void ForwardAnimations()
     {
         _anim.speed = 1f;
-        transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        // transform.GetChild(0).GetChild(0).GetComponent<BoxCollider2D>().enabled = true;
+        transform.GetChild(0).GetChild(0).GetComponent<CapsuleCollider2D>().enabled = true;
         transform.GetChild(0).GetChild(1).GetComponent<BoxCollider2D>().enabled = true;
         // GetComponentInChildren<BoxCollider2D>(true).enabled = true;
         // GetComponentInChildren<CapsuleCollider2D>(true).enabled = true;

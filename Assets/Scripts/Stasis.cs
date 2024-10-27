@@ -5,11 +5,14 @@ using UnityEngine;
 public class Stasis : MonoBehaviour
 {
     [SerializeField] private ObjectiveManager _objManager;
+    // private AudioSource _audioSource;
 
     private void Awake()
     {
         // _collider = GetComponent<BoxCollider2D>();
         _thingsColliding = new List<GameObject>();
+        // _audioSource = GetComponent<AudioSource>();
+        // _vol = _audioSource.volume;
     }
 
     private bool _touched;
@@ -46,19 +49,48 @@ public class Stasis : MonoBehaviour
     private void StasisTouched()
     {
         _objManager.StasisPlayer(transform.position);
-        gameObject.SetActive(false);
+        GetComponent<BoxCollider2D>().enabled = false;
+        GetComponent<SpriteRenderer>().enabled = false;
+        //gameObject.SetActive(false);
+        // _audioSource.pitch = 1f;
+        // _audioSource.volume = _vol;
+        // _audioSource.Play();
     }
 
     private void StasisMirror(GameObject mirror)
     {
         _objManager.StasisMirror(mirror, transform.position);
-        gameObject.SetActive(false);
+        GetComponent<BoxCollider2D>().enabled = false;
+        GetComponent<SpriteRenderer>().enabled = false;
+
+        // _audioSource.pitch = 1f;
+        // _audioSource.volume = _vol;
+        // _audioSource.Play();
     }
 
     public void Reset()
     {
-        gameObject.SetActive(true);
+        // gameObject.SetActive(true);
+        GetComponent<BoxCollider2D>().enabled = true;
+        GetComponent<SpriteRenderer>().enabled = true;
         _touched = false;
         _thingsColliding = new List<GameObject>();
+        // StartCoroutine(FadeOut());
     }
+
+    // private float _vol;
+    // public IEnumerator FadeOut(float duration =  0.05f)
+    // {
+    //     if (!_audioSource.isPlaying)
+    //         yield break;
+    //     float currentTime = 0;
+    //     float start = _audioSource.volume;
+    //     while (currentTime < duration)
+    //     {
+    //         currentTime += Time.deltaTime;
+    //         _audioSource.volume = Mathf.Lerp(start, 0f, currentTime / duration);
+    //         yield return null;
+    //     }
+    //     _audioSource.Stop();
+    // }
 }

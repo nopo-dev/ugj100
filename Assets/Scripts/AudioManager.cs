@@ -26,7 +26,26 @@ public class AudioManager : MonoBehaviour
         {
             return;
         }
+        if (!s.Source.isPlaying)
+            s.Source.Play();
+        else
+        {
+            StartCoroutine(FadeSound(s, 0.03f, 0f));
+            StartCoroutine(PlayAfterDelay(s, 0.05f));
+        }
+    }
+
+    private IEnumerator PlayAfterDelay(Sound s, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        s.Source.volume = 1f;
         s.Source.Play();
+    }
+
+    public void FadeOut(string name)
+    {
+        Sound s = Array.Find(Sounds, sound => sound.Name == name);
+        StartCoroutine(FadeSound(s, 0.05f, 0f));
     }
 
     public static IEnumerator FadeSound(Sound s, float duration, float targetVolume)
@@ -43,7 +62,7 @@ public class AudioManager : MonoBehaviour
             yield return null;
         }
         s.Source.Stop();
-        s.Source.volume = vol;
+        s.Source.volume = 1f;
     }
 
     public void Duck(string name)
